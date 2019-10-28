@@ -1,0 +1,11 @@
+Package: rLakeHeatFluxAnalyzer
+Type: Package
+Title: Calculate heat fluxes from standart buoy data
+Version: 0.2
+Date: 2019-10-25
+Author: 
+Maintainer: Who to complain to <yourfault@somewhere.net>
+Imports: pracma
+Description: More about what it does (maybe more than one line)
+License: MIT
+RoxygenNote: 6.1.1
