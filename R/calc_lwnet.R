@@ -1,5 +1,6 @@
 
 
+
 #' Calculate net long wave radiation
 #'
 #' @name calc_lwnet
@@ -37,27 +38,15 @@ calc_lwnet <- function(time,lat,press,ta,rh,sw,ts){
   
   
   
-  ## needs translation !!
-  
-  # when short-wave is zero make cc = day time average
-  
-  #dateV <- datevec(time)
-  
-  #[~,~,b] <- unique(dateV(:,1:3),'rows')
-  
-  b <- as.numeric(format(time,"%d"))
+  # Create daily averages of cloud fraction for each day
+  b <- format(time,"%Y-%m-%d")
   
   daily_av <- aggregate(clf,by=list(b),mean, na.rm=TRUE)
   
-  c2 <- clf
+  # Replace clf on times where sw == 0, by the daily average
+  c2=merge(list("Group.1"=b),daily_av,by="Group.1")
   
-  for (ii in 1:length(unique(b))){
-    
-    c2[b == ii] <- daily_av[ii]
-    
-  }
-  
-  clf[sw == 0] <- c2[sw == 0]
+  clf[sw == 0] <- c2[sw == 0,2]
   
   
   
@@ -90,3 +79,4 @@ calc_lwnet <- function(time,lat,press,ta,rh,sw,ts){
   
   
 }
+
