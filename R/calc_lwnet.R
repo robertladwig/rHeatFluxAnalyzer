@@ -1,5 +1,6 @@
 
 
+
 #' Calculate net long wave radiation
 #'
 #' @name calc_lwnet
@@ -78,3 +79,4 @@ calc_lwnet <- function(time,lat,press,ta,rh,sw,ts){
   
   
 }
+

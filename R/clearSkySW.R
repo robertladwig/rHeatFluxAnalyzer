@@ -1,4 +1,5 @@
 
+
 #' Calculate the clear sky short wave radiation
 #'
 #' @name clearSkySW

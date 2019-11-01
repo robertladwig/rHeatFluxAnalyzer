@@ -1,0 +1,13 @@
+Configuration file for Esthwaite
+
+uSt_a, uSt_aN, t10, Evap, Qlin, Qe, tau, obu, Qlnet, Qlout, Qsr, rh10, Qh, C_E, C_EN, C_E10, C_E10N, C_H, C_HN, C_H10, C_H10N, C_D, C_DN, C_D10, C_D10N, wTemp, u10, u10N		#outputs
+3600		#output resolution (s)
+2		#height from surface for wind measurement (m)
+2		#height from surface for temperature measurement (m)
+2		#height from surface for humidity measurement (m)
+54		#latitude (degN)
+0		#altitude (m)
+98		#max wind speed (m/s)   inf if none
+0		#min wind speed (m/s)   -inf if none
+N		#plot figure (Y/N)
+Y		#write results to file (Y/N)
