@@ -1,4 +1,5 @@
 
+
 #' Calculate the clear sky short wave radiation
 #'
 #' @name clearSkySW
@@ -95,16 +96,9 @@ clearSkySW <- function(time,lat,pressure=NULL,temperature=NULL,RH=NULL){
   
   #n  <- floor(time-datenum(tm[,1],1,0))  # Julian day
   
-  n <- as.numeric(format(time,"%j")) + (as.numeric(format(time,"%H"))*3600 +
-                                          
-                                          as.numeric(format(time,"%M"))*60 +
-                                          
-                                          as.numeric(format(time,"%S")))/86400
-  
-  
+  n <- as.numeric(format(time,"%j"))
   
   tm  <-  as.numeric(format(time,"%H"))           # time (hours)
-  
   
   
   cosN <- 1+0.034*cos(2*pi*(n-1)/365)
@@ -201,7 +195,7 @@ clearSkySW <- function(time,lat,pressure=NULL,temperature=NULL,RH=NULL){
   
   ISW <- I0*cosZ*T_rT_pg*T_w*T_a
   
-  useI <- ISW<0
+  useI <- ISW>0
   
   clrSW <- rep(0,length(time))
   
