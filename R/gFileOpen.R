@@ -1,3 +1,11 @@
+#' read in forcing data for heat flux calculations
+#'
+#' @param fileName Name of the file to read in
+#' @param treadAsWtr Logical, is the inputfile water temperature with several depths?
+#' @export
+#' @author Johannes Feldbauer
+#' @return Returns a list with date, data and if treatAsWtr = TRUE depths of the observations
+
 gFileOpen <- function(fileName,treatAsWtr=FALSE){
 
   # author: Johannes Feldbauer 2019
@@ -24,5 +32,5 @@ gFileOpen <- function(fileName,treatAsWtr=FALSE){
     headers <- NULL
     }
 
-  return(list(dates=dates,dat=dat,depth=headers))
+  return(list(dates=dates,dat=dat,depths=headers))
 }

@@ -1,3 +1,10 @@
+#' Function to construct input data dependency
+#'
+#' @param outputNames Names of the variables that should be outputed
+#' @param pltMods Modifications to the plot settings
+#' @return Returns a list with several tables and lists for further calculations
+
+
 OutputConstructor <- function(outputNames,pltMods){
 
   outputOptions <-  c('tau','Qh','Qe','C_DN','C_EN','C_HN','C_D10N','C_E10N','C_H10N','C_D',
@@ -363,7 +370,7 @@ OutputConstructor <- function(outputNames,pltMods){
       }
     }
   }
-  return(list(truthTable=truthTable,
+  return(list(TT=truthTable,
               outputOptions=outputOptions,
               writeTable=writeTable,
               plotTable=plotTable,

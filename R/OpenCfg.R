@@ -1,3 +1,9 @@
+#' function to read in config file for rLHFA
+#'
+#' @param LakeName Name of the Lake. Forcing and config file must have the same name
+#' @param folder Folder where the config file is stored
+#' @return Returns a list with options from the config file
+
 OpenCfg <- function(LakeName,folder){
  # original Matlab Author: Jordan S Read 2009
  # translated to R from Johannes Feldbauer 2019
