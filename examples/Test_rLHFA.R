@@ -4,7 +4,7 @@ library(ggplot2)
 
 Sys.setenv(tz="GMT")
 
-source(".../CommonFunctions.R") # Path to CommonFunctions.R
+source("CommonFunctions.R") # Path to CommonFunctions.R
 
 example_wtr=getExampleWaterT()
 example_meteo=getExampleMeteo()
@@ -12,7 +12,7 @@ example_config=getExampleConfig()
 example_results=getExampleMatlabResults()
 
 
-setwd(".../Github/R") # setwd to the "R" folder on github
+setwd("../R") # setwd to the "R" folder on github
 
 # Test the rLHFA
 # Order needs to be like this, because some functions require other functions in the package
