@@ -19,7 +19,7 @@ DownSample_TS <- function(Dates,outRs,VarArray=NULL ){
 
   matStep <- outRs#/86400 #matdates based on day unit, conver seconds/day
   u_matStep <- 1/matStep
-  sortedDates <- Dates #°°°---°° assumes values passed are pre-sorted °°--°°°
+  sortedDates <- Dates # assumes values passed are pre-sorted 
 
   tempDates <- floor(as.numeric(sortedDates)*u_matStep)*matStep
 

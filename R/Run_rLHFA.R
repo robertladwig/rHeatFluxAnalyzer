@@ -315,7 +315,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
 
     # *** down sampling ***
     if (OC$TT$dwnSmple){
-      cat(paste0('Down sampling ' LakeName '.airT data'])
+      cat(paste0('Down sampling ', LakeName, '.airT data \n'))
       DS_airT <- DownSample_TS(airT$dates,Cfg$outRs,airT$dat)
       airT$dates <- DS_airT$DS_dates
       airT$dat <- DS_airT$DS_varArray
@@ -383,7 +383,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
       varL <- length(dates)
       wt$dat <- wt$dat[is.element(wt$dates,idx)]
       wnd$dat <- wnd$dat[is.element(wnd$dat,idx)]
-      rh$dat <- rh$dat(is.element(rh$dat,idx)]
+      rh$dat <- rh$dat[is.element(rh$dat,idx)]
       airT$dat <- airT$dat[is.element(airT$dates,idx)]
       wt$dates <- as.POSIXct(idx,origin = "1970-01-01")
       wnd$dates <- as.POSIXct(idx,origin = "1970-01-01")
@@ -631,7 +631,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
 
   # momentum flux
   if (OC$TT$wrt_tau){
-    OC$OC$writeTable$tau <- mm(:,1)
+    OC$OC$writeTable$tau <- mm[,1]
   }
 
   # sensible heat flux
