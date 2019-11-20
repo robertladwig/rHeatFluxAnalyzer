@@ -2,6 +2,7 @@
 #'
 #' @param outputNames Names of the variables that should be outputed
 #' @param pltMods Modifications to the plot settings
+#' @export
 #' @return Returns a list with several tables and lists for further calculations
 
 

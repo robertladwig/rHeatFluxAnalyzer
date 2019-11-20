@@ -2,6 +2,7 @@
 #'
 #' @param LakeName Name of the Lake. Forcing and config file must have the same name
 #' @param folder Folder where the config file is stored
+#' @export
 #' @return Returns a list with options from the config file
 
 OpenCfg <- function(LakeName,folder){

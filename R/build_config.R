@@ -1,3 +1,9 @@
+#' Build config file for rLHFA
+#' 
+#' @param LakeName Name of the lake
+#' @param directory Folder where the input files are stored
+#' @export
+
 build_config <- function(LakeName,directory){
 
 done <- FALSE
