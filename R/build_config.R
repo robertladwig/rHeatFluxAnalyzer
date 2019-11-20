@@ -9,7 +9,7 @@ defSlt <- 'wTemp'
 fI <- file.exists(paste0(directory, '/', LakeName, '.hfx'))
 if (fI){
   cat(paste0("File '",LakeName, ".hfx' allready exists.\n"))
-  create <- readline("Continue anyway? (Y/N) \n")
+  create <- readline(paste0("Create new file? Alternatively use ",LakeName, ".hfx"," (Y/N) \n"))
   if(!create%in%c("y","Y","yes","YES","Yes")){
     cat("Done \n")
   }
