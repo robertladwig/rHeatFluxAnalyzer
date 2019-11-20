@@ -4,18 +4,19 @@
 #' @param Folder Folder the forcing and config files are stored in
 #' @param skipLoad Use own config file (must then be placed in Folder)
 #' @export
+#' @examples Run_LHFA(LakeName="Esthwaite",Folder="../data",skipLoad=TRUE)
 
-Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE)
+Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
 #----Author: Jordan S Read 2009 ----
   #----Modified by R. Iestyn Woolway ----
   #---- R translation by Johannes Feldbauer -----
-
-  lhfa_version <- '1.1.2'
 
 
   rm(list = ls())
   graphics.off()
   cat("\f")
+
+  lhfa_version <- '1.1.2'
 
   #done <- FALSE
   if (!skipLoad){
@@ -544,357 +545,362 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE)
   }
   #herehere#
   # re-adjust dates depending on lw and lwnet files
-  if OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW && OC$TT$openLWnet
-  idx <- intersect(intersect(intersect(intersect(rh$dates,airT$dates),wt$dates),sw$dates),lwnet$dates)
-  dates <- idx
-  varL <- length(dates)
-  rh$dat <- rh$dat(is.element(rh$dates,idx))
-  airT <- airT(is.element(airT$dates,idx))
-  wt$dat <- wt$dat(is.element(wt$dates,idx))
-  sw <- sw(is.element(sw$dates,idx))
-  lwnet <- lwnet(is.element(lwnet$dates,idx))
-  wt$dates <- idx
-  sw$dates <- idx
-  rh$dates <- idx
-  airT$dates <- idx
-  lwnet$dates <- idx
-  end
+  if (OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW && OC$TT$openLWnet){
+    idx <- intersect(intersect(intersect(intersect(rh$dates,airT$dates),
+                                         wt$dates),sw$dates),lwnet$dates)
+    dates <- idx
+    varL <- length(dates)
+    rh$dat <- rh$dat[is.element(rh$dates,idx)]
+    airT <- airT[is.element(airT$dates,idx)]
+    wt$dat <- wt$dat[is.element(wt$dates,idx)]
+    sw$dat <- sw$dat[is.element(sw$dates,idx)]
+    lwnet$dat <- lwnet$dat[is.element(lwnet$dates,idx)]
+    wt$dates <- as.POSIXct(idx,origin="1970-01-01")
+    sw$dates <- as.POSIXct(idx,origin="1970-01-01")
+    rh$dates <- as.POSIXct(idx,origin="1970-01-01")
+    airT$dates <- as.POSIXct(idx,origin="1970-01-01")
+    lwnet$dates <- as.POSIXct(idx,origin="1970-01-01")
+  }
 
-  if OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW && OC$TT$openLWnet && OC$TT$openWnd
-  idx <- intersect(intersect(intersect(intersect(intersect(rh$dates,airT$dates),wt$dates),sw$dates),lwnet$dates),wnd$dat)
-  dates <- idx
-  varL <- length(dates)
-  rh$dat <- rh$dat(is.element(rh$dates,idx))
-  airT <- airT(is.element(airT$dates,idx))
-  wt$dat <- wt$dat(is.element(wt$dates,idx))
-  sw <- sw(is.element(sw$dates,idx))
-  lwnet <- lwnet(is.element(lwnet$dates,idx))
-  wnd <- wnd(is.element(wnd$dat,idx))
-  wt$dates <- idx
-  sw$dates <- idx
-  rh$dates <- idx
-  airT$dates <- idx
-  lwnet$dates <- idx
-  wnd$dat <- idx
-  end
+  if( OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW && 
+      OC$TT$openLWnet && OC$TT$openWnd){
+    idx <- intersect(intersect(intersect(intersect(intersect(rh$dates,airT$dates),wt$dates),
+                                         sw$dates),lwnet$dates),wnd$dat)
+    dates <- idx
+    varL <- length(dates)
+    rh$dat <- rh$dat[is.element(rh$dates,idx)]
+    airT <- airT[is.element(airT$dates,idx)]
+    wt$dat <- wt$dat[is.element(wt$dates,idx)]
+    sw$dat <- sw$dat[is.element(sw$dates,idx)]
+    lwnet$dat <- lwnet$dat[is.element(lwnet$dates,idx)]
+    wnd$dat <- wnd$dat[is.element(wnd$dat,idx)]
+    wt$dates <- as.POSIXct(idx,origin="1970-01-01")
+    sw$dates <- as.POSIXct(idx,origin="1970-01-01")
+    rh$dates <- as.POSIXct(idx,origin="1970-01-01")
+    airT$dates <- as.POSIXct(idx,origin="1970-01-01")
+    lwnet$dates <- as.POSIXct(idx,origin="1970-01-01")
+    wnd$dates <- as.POSIXct(idx,origin="1970-01-01")
+  }
 
   # if data isn't downsampled, define times and variable length
-  if !OC$TT$dwnSmple
-  if OC$TT$openWtr
-  dates <- wt$dates
-  varL <- length(dates)
-  end
-  if OC$TT$openAirT
-  dates <- airT$dates
-  varL <- length(dates)
-  end
-  if OC$TT$openRH
-  dates <- rh$dates
-  varL <- length(dates)
-  end
-  if OC$TT$openSW
-  dates <- sw$dates
-  varL <- length(dates)
-  end
-  if OC$TT$openWnd
-  dates <- wnd$dat
-  varL <- length(dates)
-  end
-  if OC$TT$openLWnet
-  dates <- lwnet$dates
-  varL <- length(dates)
-  end
-  end
+  if (!OC$TT$dwnSmple){
+    if (OC$TT$openWtr){
+      dates <- wt$dates
+      varL <- length(dates)
+    }
+    if (OC$TT$openAirT){
+      dates <- airT$dates
+      varL <- length(dates)
+    }
+    if (OC$TT$openRH){
+      dates <- rh$dates
+      varL <- length(dates)
+    }
+    if (OC$TT$openSW){
+      dates <- sw$dates
+      varL <- length(dates)
+    }
+    if (OC$TT$openWnd){
+      dates <- wnd$dates
+      varL <- length(dates)
+    }
+    if (OC$TT$openLWnet){
+      dates <- lwnet$dates
+      varL <- length(dates)
+    }
+  }
 
   #****-----varL is the length of output files as of here-------*****
   # water temperature
-  if OC$TT$wrt_wTemp
-  OC$OC$writeTable$wTemp <- wt$dat
-  end
+  if (OC$TT$wrt_wTemp){
+    OC$OC$writeTable$wTemp <- wt$dat
+  }
 
   # calculate surface fluxes
-  if OC$TT$senslatYes || OC$TT$QtotYes
-  mm <- sens_latent(wt$dat,wnd,airT,rh$dat,Cfg$wndH,Cfg$htH,Cfg$hqH,Cfg$alt,Cfg$lat)
-  end
+  if (OC$TT$senslatYes || OC$TT$QtotYes){
+    mm <- sens_latent(wt$dat,wnd$dat,airT$dat,rh$dat,Cfg$wndH,Cfg$htH,Cfg$hqH,Cfg$alt,Cfg$lat)
+  }
 
   # atmospheric stability
-  if OC$TT$wrt_obu
-  zL1 <- Cfg$wndH./mm(:,35)
-  zL1(zL1 > 15) <- 15
-  zL1(zL1 < -15) <- -15
-  OC$OC$writeTable$obu <- zL1
-  end
+  if (OC$TT$wrt_obu){
+    zL1 <- Cfg$wndH/mm[,35]
+    zL1[zL1 > 15] <- 15
+    zL1[zL1 < -15] <- -15
+    OC$OC$writeTable$obu <- zL1
+  }
 
   # momentum flux
-  if OC$TT$wrt_tau
-  OC$OC$writeTable$tau <- mm(:,1)
-  end
+  if (OC$TT$wrt_tau){
+    OC$OC$writeTable$tau <- mm(:,1)
+  }
 
   # sensible heat flux
-  if OC$TT$wrt_Qh || OC$TT$QtotYes
-  Qh <- mm(:,3)
-  if OC$TT$wrt_Qh
-  OC$OC$writeTable$Qh <- Qh
-  end
-  end
+  if (OC$TT$wrt_Qh || OC$TT$QtotYes){
+    Qh <- mm[,3]
+    if (OC$TT$wrt_Qh){
+      OC$OC$writeTable$Qh <- Qh
+    }
+  }
 
   # latent heat flux
-  if OC$TT$wrt_Qe || OC$TT$QtotYes
-  Qe <- mm(:,2)
-  if OC$TT$wrt_Qe
-  OC$OC$writeTable$Qe <- Qe
-  end
-  end
+  if (OC$TT$wrt_Qe || OC$TT$QtotYes){
+    Qe <- mm[,2]
+    if (OC$TT$wrt_Qe){
+      OC$OC$writeTable$Qe <- Qe
+    }
+  }
 
   # air shear velocity
-  if OC$TT$wrt_uSt_a
-  OC$OC$writeTable$uSt_a <- mm(:,4)
-  end
+  if (OC$TT$wrt_uSt_a){
+    OC$OC$writeTable$uSt_a <- mm[,4]
+  }
 
   # air shear velocity (neutral)
-  if OC$TT$wrt_uSt_aN
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$uSt_aN <- mm2(:,1)
-  end
+  if (OC$TT$wrt_uSt_aN){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$uSt_aN <- mm2[,1]
+  }
 
   # wind speed at 10 m
-  if OC$TT$wrt_u10
-  OC$OC$writeTable$u10 <- mm(:,7)
-  end
+  if (OC$TT$wrt_u10){
+    OC$OC$writeTable$u10 <- mm[,7]
+  }
 
   # wind speed at 10 m (neutral)
-  if OC$TT$wrt_u10N
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$u10N <- mm2(:,2)
-  end
+  if (OC$TT$wrt_u10N){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$u10N <- mm2[,2]
+  }
 
   # air temperature at 10 m
-  if OC$TT$wrt_t10
-  OC$OC$writeTable$t10 <- mm(:,8)
-  end
+  if (OC$TT$wrt_t10){
+    OC$OC$writeTable$t10 <- mm[,8]
+  }
 
   # relative humidity at 10 m
-  if OC$TT$wrt_rh10
-  OC$OC$writeTable$rh10 <- mm(:,10)
-  end
+  if (OC$TT$wrt_rh10){
+    OC$OC$writeTable$rh10 <- mm[,10]
+  }
 
   # transfer coefficient for momentum
-  if OC$TT$wrt_C_D
-  OC$OC$writeTable$C_D <- mm(:,14)
-  end
+  if (OC$TT$wrt_C_D){
+    OC$OC$writeTable$C_D <- mm[,14]
+  }
 
   # transfer coefficient for heat
-  if OC$TT$wrt_C_E
-  OC$OC$writeTable$C_E <- mm(:,15)
-  end
+  if (OC$TT$wrt_C_E){
+    OC$OC$writeTable$C_E <- mm[,15]
+  }
 
   # transfer coefficient for humidity
-  if OC$TT$wrt_C_H
-  OC$OC$writeTable$C_H <- mm(:,16)
-  end
+  if (OC$TT$wrt_C_H){
+    OC$OC$writeTable$C_H <- mm[,16]
+  }
 
   # transfer coefficient for momentum at 10 m
-  if OC$TT$wrt_C_D10
-  OC$OC$writeTable$C_D10 <- mm(:,17)
-  end
+  if (OC$TT$wrt_C_D10){
+    OC$OC$writeTable$C_D10 <- mm[,17]
+  }
 
   # transfer coefficient for heat at 10 m
-  if OC$TT$wrt_C_E10
-  OC$OC$writeTable$C_E10 <- mm(:,18)
-  end
+  if (OC$TT$wrt_C_E10){
+    OC$OC$writeTable$C_E10 <- mm[,18]
+  }
 
   # transfer coefficient for humidity at 10 m
-  if OC$TT$wrt_C_H10
-  OC$OC$writeTable$C_H10 <- mm(:,19)
-  end
+  if (OC$TT$wrt_C_H10){
+    OC$OC$writeTable$C_H10 <- mm[,19]
+  }
 
   # neutral transfer coefficient for momentum
-  if OC$TT$wrt_C_D10N
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$C_D10N <- mm2(:,3)
-  end
+  if (OC$TT$wrt_C_D10N){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$C_D10N <- mm2[,3]
+  }
 
   # neutral drag coefficient for heat
-  if OC$TT$wrt_C_E10N
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$C_E10N <- mm2(:,4)
-  end
+  if (OC$TT$wrt_C_E10N){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$C_E10N <- mm2[,4]
+  }
 
   # neutral drag coefficient for humidity
-  if OC$TT$wrt_C_H10N
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$C_H10N <- mm2(:,5)
-  end
+  if (OC$TT$wrt_C_H10N){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$C_H10N <- mm2[,5]
+  }
 
   # neutral transfer coefficient for momentum
-  if OC$TT$wrt_C_DN
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$C_DN <- mm2(:,6)
-  end
+  if (OC$TT$wrt_C_DN){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$C_DN <- mm2[,6]
+  }
 
   # neutral drag coefficient for heat
-  if OC$TT$wrt_C_EN
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$C_EN <- mm2(:,7)
-  end
+  if (OC$TT$wrt_C_EN){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$C_EN <- mm2[,7]
+  }
 
   # neutral drag coefficient for humidity
-  if OC$TT$wrt_C_HN
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$C_HN <- mm2(:,8)
-  end
+  if (OC$TT$wrt_C_HN){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$C_HN <- mm2[,8]
+  }
 
   # evaporation
-  if OC$TT$wrt_Evap
-  OC$OC$writeTable$Evap <- mm(:,27)
-  end
+  if (OC$TT$wrt_Evap){
+    OC$OC$writeTable$Evap <- mm[,27]
+  }
 
   # net long wave heat flux
-  if OC$TT$wrt_Qlnet
-  OC$OC$writeTable$Qlnet <- lwnet
-  end
+  if (OC$TT$wrt_Qlnet){
+    OC$OC$writeTable$Qlnet <- lwnet$dat
+  }
 
   # incoming long wave heat flux
-  if OC$TT$wrt_Qlin
-  press <- 101325.*(1 - 2.25577e-5.*Cfg$alt).^5.25588 # Pa
-  press <- press./100 # mb
-  [lw,!,!] <- calc_lwnet(dates,Cfg$lat,press,airT,rh$dat,sw,wt$dat)
-  OC$OC$writeTable$Qlin <- lw
-  end
+  if (OC$TT$wrt_Qlin){
+    press <- 101325*(1 - 2.25577E-5*Cfg$alt)^5.25588 # Pa
+    press <- press/100 # mb
+    lwm <- calc_lwnet(dates,Cfg$lat,press,airT$dat,rh$dat,sw$dat,wt$dat)$lw
+    OC$OC$writeTable$Qlin <- lwm
+  }
 
   # outgoing long wave heat flux
-  if OC$TT$wrt_Qlout
-  Tk <- wt$dat + 273.13
-  emiss <- 0.972
-  S_B <- 5.67E-8
-  LWo <- S_B*emiss*Tk.^4
-  OC$OC$writeTable$Qlout <- LWo
-  end
+  if (OC$TT$wrt_Qlout){
+    Tk <- wt$dat + 273.13
+    emiss <- 0.972
+    S_B <- 5.67E-8
+    LWo <- S_B*emiss*Tk^4
+    OC$OC$writeTable$Qlout <- LWo
+  }
 
   # reflected short wave radiaiton
-  if OC$TT$wrt_Qsr || OC$TT$QtotYes
-  if Cfg$outRs >= 86400
-  datev <- datevec(dates)
-  datev(:,4) <- 12
-  dates2 <- datenum(datev)
-  sw_alb <- sw_albedo(dates2,Cfg$lat)
-  else
-  sw_alb <- sw_albedo(dates,Cfg$lat)
-  end
-  Qsr <- sw.*sw_alb # reflected short wave radiation
-  if OC$TT$wrt_Qsr
-  OC$OC$writeTable$Qsr <- Qsr
-  end
-  end
+  if (OC$TT$wrt_Qsr || OC$TT$QtotYes){
+    if (Cfg$outRs >= 86400){
+      ## needs translation ##
+      #datev <- datevec(dates)
+      #datev[,4] <- 12
+      #dates2 <- datenum(datev)
+      sw_alb <- sw_albedo(dates2,Cfg$lat)
+    } else {
+      sw_alb <- sw_albedo(dates,Cfg$lat)
+    }
+    Qsr <- sw$dat*sw_alb # reflected short wave radiation
+    if (OC$TT$wrt_Qsr){
+      OC$OC$writeTable$Qsr <- Qsr
+    }
+  }
 
   # total surface heat flux
-  if OC$TT$wrt_Qtot
-  # Qtot <- sw - Qsr - Qe - Qh + lwnet
-  Qtot <- sw - Qsr - Qe - Qh + lw - LWo
-  OC$OC$writeTable$Qtot <- Qtot
-  end
+  if (OC$TT$wrt_Qtot){
+    # Qtot <- sw - Qsr - Qe - Qh + lwnet
+    Qtot <- sw$dat - Qsr - Qe - Qh + lwm - LWo
+    OC$OC$writeTable$Qtot <- Qtot
+  }
 
   # short wave radiation
-  if OC$TT$wrt_Qs
-  OC$OC$writeTable$Qs <- sw
-  end
+  if (OC$TT$wrt_Qs){
+    OC$OC$writeTable$Qs <- sw$dat
+  }
 
   # short wave radiation
-  if OC$TT$wrt_Qsin
-  if Cfg$outRs >= 86400 # quick fix for >daily averages
-  datev <- datevec(dates)
-  datev(:,4) <- 12
-  dates2 <- datenum(datev)
-  sw_alb <- sw_albedo(dates2,Cfg$lat)
-  else
-  sw_alb <- sw_albedo(dates,Cfg$lat)
-  end
-  Qsr <- sw.*sw_alb # reflected short wave radiation
-  OC$OC$writeTable$Qsin <- sw - Qsr
-  end
+  if (OC$TT$wrt_Qsin){
+    if (Cfg$outRs >= 86400) {# quick fix for >daily averages
+      ## needs translation ##
+      #datev <- datevec(dates)
+      #datev(:,4) <- 12
+      #dates2 <- datenum(datev)
+      sw_alb <- sw_albedo(dates2,Cfg$lat)
+    } else {
+      sw_alb <- sw_albedo(dates,Cfg$lat)
+    }
+    Qsr <- sw$dat*sw_alb # reflected short wave radiation
+    OC$OC$writeTable$Qsin <- sw$dat - Qsr
+  }
 
   # air density 10 m
-  if OC$TT$wrt_rhoa10
-  airT10 <- mm(:,8)
-  rh10 <- mm(:,10)
-  press <- 101325.*(1 - 2.25577e-5.*Cfg$alt).^5.25588 # Pa
-  press <- press./100 # mb
-  e_s <- 6.11.*exp(17.27.*airT10./(237.3 + airT10)) # saturated vapour pressure at ta, mb
-  e_a <- rh10.*e_s./100 # vapour pressure, mb
-  q_z <- 0.622.*e_a./press # specific humidity, kg kg-1
-  R_a <- 287.*(1 + 0.608.*q_z)
-  rhoa10 <- 100*press./(R_a.*(airT10 + 273.16))
-  OC$OC$writeTable$rhoa10 <- rhoa10
-  end
+  if (OC$TT$wrt_rhoa10){
+    airT10 <- mm[,8]
+    rh10 <- mm[,10]
+    press <- 101325*(1 - 2.25577e-5*Cfg$alt)^5.25588 # Pa
+    press <- press/100 # mb
+    e_s <- 6.11*exp(17.27*airT10/(237.3 + airT10)) # saturated vapour pressure at ta, mb
+    e_a <- rh10*e_s/100 # vapour pressure, mb
+    q_z <- 0.622*e_a/press # specific humidity, kg kg-1
+    R_a <- 287*(1 + 0.608*q_z)
+    rhoa10 <- 100*press/(R_a*(airT10 + 273.16))
+    OC$OC$writeTable$rhoa10 <- rhoa10
+  }
 
   # water density
-  if OC$TT$wrt_rhow
-  rhow <- 1000*(1-1.9549*0.00001*abs(wt$dat-3.84).^1.68)
-  OC$OC$writeTable$rhow <- rhow
-  end
+  if (OC$TT$wrt_rhow){
+    rhow <- 1000*(1-1.9549*0.00001*abs(wt$dat-3.84)^1.68)
+    OC$OC$writeTable$rhow <- rhow
+  }
 
   # air density
-  if OC$TT$wrt_rhoa
-  press <- 101325.*(1 - 2.25577e-5.*Cfg$alt).^5.25588 # Pa
-  press <- press./100 # mb
-  e_s <- 6.11.*exp(17.27.*airT./(237.3 + airT)) # saturated vapour pressure at ta, mb
-  e_a <- rh$dat.*e_s./100 # vapour pressure, mb
-  q_z <- 0.622.*e_a./press # specific humidity, kg kg-1
-  R_a <- 287.*(1 + 0.608.*q_z)
-  rhoa <- 100*press./(R_a.*(airT + 273.16))
-  OC$OC$writeTable$rhoa <- rhoa
-  end
+  if (OC$TT$wrt_rhoa){
+    press <- 101325*(1 - 2.25577e-5*Cfg$alt)^5.25588 # Pa
+    press <- press/100 # mb
+    e_s <- 6.11*exp(17.27*airT/(237.3 + airT)) # saturated vapour pressure at ta, mb
+    e_a <- rh$dat*e_s/100 # vapour pressure, mb
+    q_z <- 0.622*e_a/press # specific humidity, kg kg-1
+    R_a <- 287*(1 + 0.608*q_z)
+    rhoa <- 100*press/(R_a*(airT + 273.16))
+    OC$OC$writeTable$rhoa <- rhoa
+  }
 
   # build plot array
-  if Cfg$plotYes
-  cat('Plotting results')
-  plotLA_results(OC$writeTable,OC$plotTable,dates,LakeName,Folder)
-  cat('completed\n\n')
-  end
+  if (Cfg$plotYes){
+    cat('Plotting results \n')
+    plotLA_results(OC$writeTable,OC$plotTable,dates,LakeName,Folder)
+    cat('completed\n\n')
+  }
 
   # build file array
-  writeNames <- {}
+  writeNames <- list()
   cnt <- 1
-  for k <- 1:length(OC$outputOptions)
-  if !islogical(OC$OC$writeTable$(char(OC$outputOptions{k})))
-  writeNames{cnt} <- OC$outputOptions{k}
-  cnt <- cnt+1
-  end
-  end
+  for (k in 1:length(OC$outputOptions)){
+    if (!is.logical(OC$OC$writeTable[[OC$outputOptions[k]]])){
+      writeNames[[cnt]] <- OC$outputOptions[k]
+      cnt <- cnt+1
+    }
+  }
 
   # write to file
-  if Cfg$writeYes
-  cat('Writing results to file')
-  end
+  if (Cfg$writeYes){
+    cat('Writing results to file \n')
+  }
 
-  if Cfg$writeYes && !isempty(writeNames)
-  outputFile <- [Folder '/' LakeName '_results.txt']
-  outFile <- file.exists(outputFile,'w')
-  if eq(outFile,-1)
-  stop([Folder '/' LakeName '_results.csv file in use, please close'])
-  end
-  wrt <- @(writer)cat(outFile,writer) # build a subfunction that writes
-  # the contents of the input "writer"
-  # to the file everytime wrt is called
-  wrt('DateTime')
-  for i <- 1:cnt-1
-  wrt([OC$delimO writeNames{i} OC$plotTable[[writeNames[i]]][YLabel][]])
-  end
-  wrt('\r\n')
-  for j <- 1:varL
-  wrt(datestr(dates(j),OC$dateOutput)) #change 'dateOutput'
-  # in the 'OutputConstructor.m' file
-  for i <- 1:length(writeNames)
-  wrt([OC$delimO num2str(OC$OC$writeTable$(char(writeNames{i}))(j))])
-  end
-  wrt('\r\n')
-  end
-  fclose all
-  end
-  if Cfg$writeYes
-  cat('completed\n\n')
-  end
-  disp('Lake Heat Flux Analyzer is complete')
+  if (Cfg$writeYes && length(writeNames)>0){
+    outputFile <- paste0(Folder, '/', LakeName, '_results.txt')
+    outFile <- file.exists(outputFile)
+    if (!outFile){
+      stop(paste0(Folder, '/', LakeName, '_results.csv file in use, please close'))
+    }
+    wrt <- function(writer){cat(outFile,writer)} # build a subfunction that writes
+    # the contents of the input "writer"
+    # to the file everytime wrt is called
+    wrt('DateTime')
+    for (i in 1:(cnt-1)){
+      wrt(list(OC$delimO, writeNames[i], OC$plotTable[[writeNames[i]]][YLabel][]))
+    }
+    wrt('\r\n')
+    for (j in 1:varL){
+      wrt(datestr(dates(j),OC$dateOutput)) #change 'dateOutput'
+      # in the 'OutputConstructor.m' file
+      for (i in 1:length(writeNames)){
+        wrt(list(OC$delimO, as.numeric(OC$OC$writeTable[[writeNames[i]]][j])))
+      }
+      wrt('\r\n')
+    }
+   
+  }
+  if (Cfg$writeYes){
+    cat('completed\n\n')
+  }
+  cat('Lake Heat Flux Analyzer is complete')
   #profile off
   #profile viewer
-  end
+}
