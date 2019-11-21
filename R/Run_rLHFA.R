@@ -882,25 +882,32 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
       stop(paste0(Folder, '/', LakeName, '_results.csv file in use, please close'))
     }
     close(outFile)
-    wrt <- function(writer,ap=TRUE){cat(writer,file = outputFile,append = ap)} # build a subfunction that writes
+    #wrt <- function(writer,ap=TRUE){cat(writer,file = outputFile,append = ap)} # build a subfunction that writes
     # the contents of the input "writer"
     # to the file everytime wrt is called
-    wrt('DateTime',ap=FALSE)
+    #wrt('DateTime',ap=FALSE)
+    coln <- 'DateTime'
     for (i in 1:(cnt-1)){
-      wrt(paste0(OC$delimO," ", writeNames[[i]], OC$plotTable[[writeNames[[i]]]]["YLabel"],
+      #wrt(paste0(OC$delimO," ", writeNames[[i]], OC$plotTable[[writeNames[[i]]]]["YLabel"],
+      #          collapse = ""))
+      coln <- c(coln,paste0(writeNames[[i]], OC$plotTable[[writeNames[[i]]]]["YLabel"],
                  collapse = ""))
     }
-    wrt('\r\n')
-    for (j in 1:varL){
-      wrt(format(dates[j],OC$dateOutput)) #change 'dateOutput'
+    #wrt('\r\n')
+    #for (j in 1:varL){
+      #wrt(format(dates[j],OC$dateOutput)) #change 'dateOutput'
       # in the 'OutputConstructor.m' file
+      data_out <- data.frame(format(dates,OC$dateOutput))
       for (i in 1:length(writeNames)){
-        wrt(paste0(OC$delimO," ", as.numeric(OC$OC$writeTable[[writeNames[[i]]]][j]),
-                    collapse=""))
+        #wrt(paste0(OC$delimO," ", as.numeric(OC$OC$writeTable[[writeNames[[i]]]][j]),
+        #            collapse=""))
+        data_out <- cbind(data_out,as.numeric(OC$OC$writeTable[[writeNames[[i]]]]))
       }
-      wrt('\r\n')
-    }
-
+      #wrt('\r\n')
+    #}
+  colnames(data_out) <- coln
+  data_out[,2:length(writeNames)] <- round(data_out[,2:length(writeNames)],7)
+  write.table(data_out,outputFile,sep = OC$delimO,row.names = FALSE,quote = FALSE)
   }
   if (Cfg$writeYes){
     cat('completed\n\n')
