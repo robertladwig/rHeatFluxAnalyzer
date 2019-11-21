@@ -1,7 +1,8 @@
-#' Function to construct input data dependency
+#' @title Construct input data dependency
 #'
 #' @param outputNames Names of the variables that should be outputed
 #' @param pltMods Modifications to the plot settings
+#' @export
 #' @return Returns a list with several tables and lists for further calculations
 
 
@@ -26,7 +27,7 @@ OutputConstructor <- function(outputNames,pltMods){
   dateInput <-  'yyyy-mm-dd HH:MM'
   delimI <- '\t'
 
-  dateOutput  <- 'yyyy-mm-dd HH:MM'
+  dateOutput  <- '%Y-%m-%d %H:%M'
   delimO <- '\t'
 
   # Figure defaults

@@ -4,6 +4,7 @@
 #' calculate mean of a vector containing NaNs
 #'
 #' @name nanmean
+#' @export
 #' @param inputdata data for which to calculate the mean
 #' @return arithmetic mean of inputdata with NaNs removed. Same as mean(x,na.rm=TRUE)
 #' @seealso mean()

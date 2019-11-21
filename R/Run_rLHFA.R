@@ -4,20 +4,19 @@
 #' @param Folder Folder the forcing and config files are stored in
 #' @param skipLoad Use own config file (must then be placed in Folder)
 #' @export
+#' @examples Run_LHFA(LakeName="Esthwaite",Folder="data",skipLoad=TRUE)
 
-Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE)
+Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
 #----Author: Jordan S Read 2009 ----
   #----Modified by R. Iestyn Woolway ----
   #---- R translation by Johannes Feldbauer -----
 
-  lhfa_version <- '1.1.2'
-
-
-  rm(list = ls())
   graphics.off()
   cat("\f")
 
-  done <- FALSE
+  lhfa_version <- '1.1.2'
+
+  #done <- FALSE
   if (!skipLoad){
     build_config(LakeName,Folder)
   }
@@ -28,7 +27,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE)
   matSec <- 86400         # number of seconds in a day
   smplTs <- 50            # samplerate test length
   dateTl <- 0.00001       # tolerance for equal day (day fraction)
-  cat(pasteo('Reading ', LakeName, '.hfx file'))
+  cat(paste0('Reading ', LakeName, '.hfx file'))
   Cfg <- OpenCfg( LakeName,Folder )
   # -- end variables --
 
@@ -42,7 +41,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE)
   cat('****Building program structure****\n')
   pltMods <- NULL
   if (Cfg$plotYes){
-    cat(['Checking for ' LakeName '.plt file*'])
+    cat(paste0('Checking for ', LakeName, '.plt file*'))
     pltFileName  <- paste0(Folder, '/', LakeName, '.plt')
     oper <- file.exists(pltFileName)
     if (!oper){
@@ -53,7 +52,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE)
       cat('completed\n')
     }
   }
-  OC <- OutputConstructor(outPuts,pltMods)
+  OC <- OutputConstructor(Cfg$outPuts,Cfg$pltMods)
   fNms <- names(OC$TT)
   for (j in 1:length(fNms)){
     if (OC$TT[[fNms[j]]]){
@@ -63,11 +62,11 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE)
   cat('****completed****\n\n')
 
   if (OC$TT$openWtr){
-    cat(paste0('Reading ', LakeName, '.wtr file'))
+    cat(paste0('Reading ', LakeName, '.wtr file \n'))
     wtrFileName  <- paste0(Folder, '/', LakeName, '.wtr')
     oper <- file.exists(wtrFileName)
     if (!oper){
-      stop(paste0(LakeName, '.wtr file not found'))
+      stop(paste0(LakeName, '.wtr file not found \n'))
     }
 
     wt <- gFileOpen(wtrFileName,treatAsWtr = TRUE)
@@ -85,7 +84,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE)
     }
     if (mnDep>0){
       cat(paste0(' ', mnDep, ' m is the shallowest depth in the .wtr file',
-                 ' which will be used to represent surface water temperatures'))
+                 ' which will be used to represent surface water temperatures. \n'))
     }
 
     # remove nans
@@ -113,785 +112,804 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE)
     if ((Cfg$outRs - matRs)>dateTl){
       OC$TT$dwnSmple <- TRUE   #down sample if necessary
     }
-##+++++++++++++++++++++ here I am +++++++++++++++++++++++++++##
+
   # *** down sampling ***
     if (OC$TT$dwnSmple){
-      cat(['Down sampling ' LakeName '.wtr data'])
-      [DS_wtrD,DS_wtr] <- DownSample_TS(wt$dates,Cfg$outRs,wt$dat)
+      cat(paste0('Down sampling ', LakeName, '.wtr data'))
+      DSwt <- DownSample_TS(wt$dates,Cfg$outRs,wt$dat)
+      DS_wtrD <- DSwt$DS_dates
+      DS_wtr <- DSwt$DS_varArray
       wt$dates <- DS_wtrD
       wt$dat <- DS_wtr
       varL <- length(wt$dates)
-      clear DS_wtrD DS_wtr
+      rm (DS_wtrD, DS_wtr,DSwt)
       cat('completed\n\n')
     }
   }
 
-  if OC$TT$openWnd
-  cat(['Reading ' LakeName '.wnd file'])
-  wndFileName  <- [Folder '/' LakeName '.wnd']
-  oper <- fopen(wndFileName)
-  if eq(oper,-1)
-  error([LakeName '.wnd file not found'])
-  end
-  fclose all
-  [wndD,wnd] <- gFileOpen(wndFileName)
-  wnd(wnd < Cfg$wndMn) <- Cfg$wndMn
-  wnd(wnd > Cfg$wndMx) <- Cfg$wndMx
+  if (OC$TT$openWnd){
+    cat(paste0('Reading ', LakeName, '.wnd file \n'))
+    wndFileName  <- paste0(Folder, '/', LakeName, '.wnd')
+    oper <- file.exists(wndFileName)
+    if (!oper){
+      stop(paste0(LakeName, '.wnd file not found \n'))
+    }
+    wnd <- gFileOpen(wndFileName)
+    # set values between min and max values
+    wnd$dat[wnd$dat < Cfg$wndMn] <- Cfg$wndMn
+    wnd$dat[wnd$dat > Cfg$wndMx] <- Cfg$wndMx
 
-  # remove nans
-  idx <- isnan(wnd)
-  wnd(idx) <- []
-  wndD(idx) <- []
-  cat('completed\n\n')
+    # remove nans
+    idx <- is.na(wnd$dat)
+    wnd$dat <- wnd$dat[!idx]
+    wnd$dates <- wnd$dates[!idx]
+    cat('completed\n\n')
 
-  #*** find samplerate of raw data
-  if length(wndD) < smplTs
-  tLen <- length(wndD)
-  else
-    tLen <- smplTs
-  end
-  steps <- NaN(1,tLen-1)
-  for i <- 1:tLen-1
-  steps(i) <- wndD(i+1)-wndD(i)
-  end
-  if eq(min(steps),0)
-  matRs <- mean(steps)*matSec
-  else
-    matRs <- min(steps)*matSec #current sample rate of raw data in seconds
-  end
-  clear vals ind numMx numCont steps tLen
-  if (Cfg$outRs - matRs)>dateTl
-  OC$TT$dwnSmple <- TRUE   #down sample if necessary
-  end
+    #*** find samplerate of raw data
+    if (length(wnd$dates) < smplTs){
+      tLen <- length(wnd$dates)
+    } else{
+      tLen <- smplTs
+    }
+    steps <- rep(NA,tLen-1)
+    for (i in 1:(tLen-1)){
+      steps[i] <- wnd$dates[i+1]-wnd$dates[i]
+    }
+    if (min(steps)==0){
+      matRs <- mean(steps)*matSec
+    } else {
+      matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+    }
+    rm( idx, steps, tLen)
+    if ((Cfg$outRs - matRs)>dateTl){
+      OC$TT$dwnSmple <- TRUE   #down sample if necessary
+    }
 
-  # *** down sampling ***
-    if OC$TT$dwnSmple
-  cat(['Down sampling ' LakeName '.wnd data'])
-  [DS_wndD,DS_wnd] <- DownSample_TS(wndD,Cfg$outRs,wnd)
-  wndD <- DS_wndD
-  wnd <- DS_wnd
-  varL <- length(wndD)
-  clear DS_wndD DS_wnd
-  cat('completed\n\n')
-  end
-  dates <- wndD
-  end
+    # *** down sampling ***
+    if (OC$TT$dwnSmple){
+      cat(paste0('Down sampling ', LakeName, '.wnd data \n'))
+      DS_wnd <- DownSample_TS(wnd$dates,Cfg$outRs,wnd$dat)
+      wnd$dates <- DS_wnd$DS_dates
+      wnd$dat <- DS_wnd$DS_varArray
+      varL <- length(wnd$dates)
+      rm(DS_wnd)
+      cat('completed\n\n')
+    }
+    dates <- wnd$dates
+  }
 
-  if OC$TT$openSW
-  if exist([Folder '/' LakeName '.sw']) > 0
-  cat(['Reading ' LakeName '.sw file'])
-  swFileName  <- [Folder '/' LakeName '.sw']
-  fclose all
-  [swD,sw] <- gFileOpen(swFileName)
-  sw(sw < 0) <- 0
+  if (OC$TT$openSW){
+    if (file.exists(paste0(Folder, '/', LakeName, '.sw'))){
+      cat(paste0('Reading ', LakeName, '.sw file'))
+      swFileName  <- paste0(Folder, '/', LakeName, '.sw')
+      sw <- gFileOpen(swFileName)
+      # remove negative values
+      sw$dat[sw$dat < 0] <- 0
 
-  # remove nans
-  idx <- isnan(sw)
-  sw(idx) <- []
-  swD(idx) <- []
-  cat('completed\n\n')
-
-  #*** find samplerate of raw data
-  if length(swD) < smplTs
-  tLen <- length(swD)
-  else
-    tLen <- smplTs
-  end
-  steps <- NaN(1,tLen-1)
-  for i <- 1:tLen-1
-  steps(i) <- swD(i+1)-swD(i)
-  end
-  if eq(min(steps),0)
-  matRs <- mean(steps)*matSec
-  else
-    matRs <- min(steps)*matSec #current sample rate of raw data in seconds
-  end
-  clear vals ind numMx numCont steps tLen
-  if (Cfg$outRs - matRs)>dateTl
-  OC$TT$dwnSmple <- TRUE   #down sample if necessary
-  end
-
-  # *** down sampling ***
-    if OC$TT$dwnSmple
-  cat(['Down sampling ' LakeName '.sw data'])
-  [DS_swD,DS_sw] <- DownSample_TS(swD,Cfg$outRs,sw)
-  swD <- DS_swD
-  sw <- DS_sw
-  varL <- length(swD)
-  clear DS_swD DS_sw
-  cat('completed\n\n')
-  end
-
-  else if exist([Folder '/' LakeName '.par']) > 0
-  cat(['Reading ' LakeName '.par file'])
-  swFileName  <- [Folder '/' LakeName '.par']
-  fclose all
-  [swD,sw] <- gFileOpen(swFileName)
-  sw(sw < 0) <- 0
-  # remove nans
-  idx <- isnan(sw)
-  sw(idx) <- []
-  swD(idx) <- []
-  parMult <- 0.4957
-  sw <- sw.*parMult
-  cat('completed\n\n')
+      # remove nans
+      idx <- is.na(sw$dat)
+      sw$dat <- sw$dat[!idx]
+      sw$dates <- sw$dates[!idx]
+      cat('completed\n\n')
 
   #*** find samplerate of raw data
-  if length(swD) < smplTs
-  tLen <- length(swD)
-  else
-    tLen <- smplTs
-  end
-  steps <- NaN(1,tLen-1)
-  for i <- 1:tLen-1
-  steps(i) <- swD(i+1)-swD(i)
-  end
-  if eq(min(steps),0)
-  matRs <- mean(steps)*matSec
-  else
-    matRs <- min(steps)*matSec #current sample rate of raw data in seconds
-  end
-  clear vals ind numMx numCont steps tLen
-  if (Cfg$outRs - matRs)>dateTl
-  OC$TT$dwnSmple <- TRUE   #down sample if necessary
-  end
+      if (length(sw$dates) < smplTs){
+        tLen <- length(sw$dates)
+      } else {
+        tLen <- smplTs
+      }
+      steps <- rep(NA,tLen-1)
+      for (i in 1:(tLen-1)){
+        steps[i] <- sw$dates[i+1] - sw$dates[i]
+      }
+      if (min(steps)==0){
+        matRs <- mean(steps)*matSec
+      } else {
+        matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+      }
+      rm (idx, steps, tLen)
+      if((Cfg$outRs - matRs)>dateTl){
+        OC$TT$dwnSmple <- TRUE   #down sample if necessary
+      }
 
   # *** down sampling ***
-    if OC$TT$dwnSmple
-  cat(['Down sampling ' LakeName '.sw data'])
-  [DS_swD,DS_sw] <- DownSample_TS(swD,Cfg$outRs,sw)
-  swD <- DS_swD
-  sw <- DS_sw
-  varL <- length(swD)
-  clear DS_swD DS_sw
-  cat('completed\n\n')
-  end
+      if (OC$TT$dwnSmple){
+        cat(paste0('Down sampling ', LakeName, '.sw data \n'))
+        DS_sw <- DownSample_TS(sw$dates,Cfg$outRs,sw$dat)
+        sw$dates <- DS_sw$DS_dates
+        sw$dat <- DS_sw$DS_varArray
+        varL <- length(sw$dates)
+        rm (DS_sw)
+        cat('completed\n\n')
+      }
 
-  else
-    error([LakeName '.sw nor .par file not found'])
-  end
-  end
-  dates <- swD
-  end
-
-  if OC$TT$openAirT
-  cat(['Reading ' LakeName '.airT file'])
-  airTFileName  <- [Folder '/' LakeName '.airT']
-  oper <- fopen(airTFileName)
-  if eq(oper,-1)
-  error([LakeName '.airT file not found'])
-  end
-  fclose all
-  [airTD,airT] <- gFileOpen(airTFileName)
-
-  # remove nans
-  idx <- isnan(airT)
-  airT(idx) <- []
-  airTD(idx) <- []
-  cat('completed\n\n')
+    } else
+      if (file.exists(paste0(Folder, '/', LakeName, '.par'))){
+        cat(paste0('Reading ', LakeName, '.par file \n'))
+        swFileName  <- paste0(Folder, '/', LakeName, '.par')
+        sw <- gFileOpen(swFileName)
+        sw$dat[sw$dat < 0] <- 0
+        # remove nans
+        idx <- is.na(sw$dat)
+        sw$dat <- sw$dat[!idx]
+        sw$dates <- sw$dates[!idx]
+        parMult <- 0.4957
+        sw$dat <- sw$dat*parMult
+        cat('completed\n\n')
 
   #*** find samplerate of raw data
-  if length(airTD) < smplTs
-  tLen <- length(airTD)
-  else
-    tLen <- smplTs
-  end
-  steps <- NaN(1,tLen-1)
-  for i <- 1:tLen-1
-  steps(i) <- airTD(i+1)-airTD(i)
-  end
-  if eq(min(steps),0)
-  matRs <- mean(steps)*matSec
-  else
-    matRs <- min(steps)*matSec #current sample rate of raw data in seconds
-  end
-  clear vals ind numMx numCont steps tLen
-  if (Cfg$outRs - matRs)>dateTl
-  OC$TT$dwnSmple <- TRUE   #down sample if necessary
-  end
+        if (length(sw$dat) < smplTs){
+          tLen <- length(sw$dates)
+        } else {
+          tLen <- smplTs
+        }
+        steps <- rep(NA,tLen-1)
+        for (i in 1:(tLen-1)){
+          steps[i] <- sw$dates[i+1]-sw$dates[i]
+        }
+        if (min(steps)==0){
+          matRs <- mean(steps)*matSec
+        } else {
+          matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+        }
+        rm (idx, steps, tLen)
+        if ((Cfg$outRs - matRs)>dateTl){
+         OC$TT$dwnSmple <- TRUE   #down sample if necessary
+        }
 
-  # *** down sampling ***
-    if OC$TT$dwnSmple
-  cat(['Down sampling ' LakeName '.airT data'])
-  [DS_airTD,DS_airT] <- DownSample_TS(airTD,Cfg$outRs,airT)
-  airTD <- DS_airTD
-  airT <- DS_airT
-  varL <- length(airTD)
-  clear DS_airTD DS_airT
-  cat('completed\n\n')
-  end
-  end
+    # *** down sampling ***
+        if (OC$TT$dwnSmple){
+          cat(paste0('Down sampling ', LakeName, '.sw data \n'))
+          DS_sw <- DownSample_TS(sw$dates,Cfg$outRs,sw$dat)
+          sw$dates <- DS_sw$DS_dates
+          sw$dat <- DS_sw$DS_varArray
+          varL <- length(sw$dates)
+          rm (DS_sw)
+          cat('completed\n\n')
+        }
 
-  if OC$TT$openRH
-  cat(['Reading ' LakeName '.rh file'])
-  rhFileName  <- [Folder '/' LakeName '.rh']
-  oper <- fopen(rhFileName)
-  if eq(oper,-1)
-  error([LakeName '.rh file not found'])
-  end
-  fclose all
-  [rhD,rh] <- gFileOpen(rhFileName)
-  rh(rh < 0) <- 0
-  rh(rh > 100) <- 100
+     } else {
+      stop(paste0(LakeName, '.sw nor .par file not found \n'))
+    }
 
-  # remove nans
-  idx <- isnan(rh)
-  rh(idx) <- []
-  rhD(idx) <- []
-  cat('completed\n\n')
+    dates <- sw$dates
+  }
 
-  #*** find samplerate of raw data
-  if length(rhD) < smplTs
-  tLen <- length(rhD)
-  else
-    tLen <- smplTs
-  end
-  steps <- NaN(1,tLen-1)
-  for i <- 1:tLen-1
-  steps(i) <- rhD(i+1)-rhD(i)
-  end
-  if eq(min(steps),0)
-  matRs <- mean(steps)*matSec
-  else
-    matRs <- min(steps)*matSec #current sample rate of raw data in seconds
-  end
-  clear vals ind numMx numCont steps tLen
-  if (Cfg$outRs - matRs)>dateTl
-  OC$TT$dwnSmple <- TRUE   #down sample if necessary
-  end
+  if (OC$TT$openAirT){
+    cat(paste0('Reading ', LakeName, '.airT file \n'))
+    airTFileName  <- paste0(Folder, '/', LakeName, '.airT')
+    oper <- file.exists(airTFileName)
+    if (!oper){
+      stop(paste0(LakeName, '.airT file not found'))
+    }
 
-  # *** down sampling ***
-    if OC$TT$dwnSmple
-  cat(['Down sampling ' LakeName '.rh data'])
-  [DS_rhD,DS_rh] <- DownSample_TS(rhD,Cfg$outRs,rh)
-  rhD <- DS_rhD
-  rh <- DS_rh
-  varL <- length(rhD)
-  clear DS_rhD DS_rh
-  cat('completed\n\n')
-  end
-  end
+    airT <- gFileOpen(airTFileName)
+
+    # remove nans
+    idx <- is.na(airT$dat)
+    airT$dat <- airT$dat[!idx]
+    airT$dates <- airT$dates[!idx]
+    cat('completed\n\n')
+
+    #*** find samplerate of raw data
+    if (length(airT$dates) < smplTs){
+      tLen <- length(airT$dates)
+    } else {
+      tLen <- smplTs
+    }
+    steps <- rep(NA,tLen-1)
+    for (i in 1:(tLen-1)){
+      steps[i] <- airT$dates[i+1]-airT$dates[i]
+    }
+    if (min(steps)==0){
+      matRs <- mean(steps)*matSec
+    } else {
+      matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+    }
+    rm( idx,steps, tLen)
+    if ((Cfg$outRs - matRs)>dateTl){
+      OC$TT$dwnSmple <- TRUE   #down sample if necessary
+    }
+
+    # *** down sampling ***
+    if (OC$TT$dwnSmple){
+      cat(paste0('Down sampling ', LakeName, '.airT data \n'))
+      DS_airT <- DownSample_TS(airT$dates,Cfg$outRs,airT$dat)
+      airT$dates <- DS_airT$DS_dates
+      airT$dat <- DS_airT$DS_varArray
+      varL <- length(airT$dates)
+      rm( DS_airT)
+      cat('completed\n\n')
+    }
+  }
+
+  if (OC$TT$openRH){
+    cat(paste0('Reading ', LakeName, '.rh file \n'))
+    rhFileName  <- paste0(Folder, '/', LakeName, '.rh')
+    oper <- file.exists(rhFileName)
+    if (!oper){
+      stop(paste0(LakeName, '.rh file not found'))
+    }
+
+    rh <- gFileOpen(rhFileName)
+    rh$dat[rh$dat < 0] <- 0
+    rh$dat[rh$dat > 100] <- 100
+
+    # remove nans
+    idx <- is.na(rh$dat)
+    rh$dat <- rh$dat[!idx]
+    rh$dates <- rh$dates[!idx]
+    cat('completed\n\n')
+
+    #*** find samplerate of raw data
+    if (length(rh$dates) < smplTs){
+      tLen <- length(rh$dates)
+    } else {
+      tLen <- smplTs
+    }
+    steps <- rep(NA,tLen-1)
+    for (i in 1:(tLen-1)){
+      steps[i] <- rh$dates[i+1]-rh$dates[i]
+    }
+    if(min(steps)==0){
+      matRs <- mean(steps)*matSec
+    } else {
+      matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+    }
+    rm( idx,steps, tLen)
+    if ((Cfg$outRs - matRs)>dateTl){
+      OC$TT$dwnSmple <- TRUE   #down sample if necessary
+    }
+
+    # *** down sampling ***
+    if( OC$TT$dwnSmple){
+      cat(paste0('Down sampling ', LakeName, '.rh data \n'))
+      DS_rh <- DownSample_TS(rh$dates,Cfg$outRs,rh$dat)
+      rh$dates <- DS_rh$DS_dates
+      rh$dat <- DS_rh$DS_varArray
+      varL <- length(rh$dates)
+      rm(DS_rh)
+      cat('completed\n\n')
+    }
+  }
 
   # make sure dates match
-  if !OC$TT$openSW
-  if OC$TT$openWtr && OC$TT$openWnd && OC$TT$openRH && OC$TT$openAirT
-  idx <- intersect(intersect(intersect(wt$dates,wndD),rhD),airTD)
-  dates <- idx
-  varL <- length(dates)
-  wt$dat <- wt$dat(ismember(wt$dates,idx))
-  wnd <- wnd(ismember(wndD,idx))
-  rh <- rh(ismember(rhD,idx))
-  airT <- airT(ismember(airTD,idx))
-  wt$dates <- idx
-  wndD <- idx
-  rhD <- idx
-  airTD <- idx
-  end
-  end
+  if (!OC$TT$openSW){
+    if (OC$TT$openWtr && OC$TT$openWnd && OC$TT$openRH && OC$TT$openAirT){
+      idx <- intersect(intersect(intersect(wt$dates,wnd$dates),rh$dates),airT$dates)
+      dates <- as.POSIXct(idx,origin = "1970-01-01")
+      varL <- length(dates)
+      wt$dat <- wt$dat[is.element(wt$dates,idx)]
+      wnd$dat <- wnd$dat[is.element(wnd$dates,idx)]
+      rh$dat <- rh$dat[is.element(rh$dat,idx)]
+      airT$dat <- airT$dat[is.element(airT$dates,idx)]
+      wt$dates <- as.POSIXct(idx,origin = "1970-01-01")
+      wnd$dates <- as.POSIXct(idx,origin = "1970-01-01")
+      rh$dates <- as.POSIXct(idx,origin = "1970-01-01")
+      airT$dates <- as.POSIXct(idx,origin = "1970-01-01")
+    }
+  }
 
-  if !OC$TT$openWnd
-  if OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW
-  idx <- intersect(intersect(intersect(rhD,airTD),wt$dates),swD)
-  dates <- idx
-  varL <- length(dates)
-  rh <- rh(ismember(rhD,idx))
-  airT <- airT(ismember(airTD,idx))
-  wt$dat <- wt$dat(ismember(wt$dates,idx))
-  sw <- sw(ismember(swD,idx))
-  wt$dates <- idx
-  swD <- idx
-  rhD <- idx
-  airTD <- idx
-  end
-  end
+  if (!OC$TT$openWnd){
+    if (OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW){
+      idx <- intersect(intersect(intersect(rh$dates,airT$dates),wt$dates),sw$dates)
+      dates <- as.POSIXct(idx,origin = "1970-01-01")
+      varL <- length(dates)
+      rh$dat <- rh$dat[is.element(rh$dates,idx)]
+      airT$dat <- airT$dat[is.element(airT$dates,idx)]
+      wt$dat <- wt$dat[is.element(wt$dates,idx)]
+      sw$dat <- sw$dat[is.element(sw$dates,idx)]
+      wt$dates <- as.POSIXct(idx,origin = "1970-01-01")
+      sw$dates <- as.POSIXct(idx,origin = "1970-01-01")
+      rh$dates <- as.POSIXct(idx,origin = "1970-01-01")
+      airT$dates <- as.POSIXct(idx,origin = "1970-01-01")
+    }
+  }
 
-  if OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW && OC$TT$openWnd
-  idx <- intersect(intersect(intersect(intersect(rhD,airTD),wt$dates),swD),wndD)
-  dates <- idx
-  varL <- length(dates)
-  rh <- rh(ismember(rhD,idx))
-  airT <- airT(ismember(airTD,idx))
-  wt$dat <- wt$dat(ismember(wt$dates,idx))
-  sw <- sw(ismember(swD,idx))
-  wnd <- wnd(ismember(wndD,idx))
-  wt$dates <- idx
-  swD <- idx
-  rhD <- idx
-  airTD <- idx
-  wndD <- idx
-  end
+  if (OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW && OC$TT$openWnd){
+    idx <- intersect(intersect(intersect(intersect(rh$dates,airT$dates),wt$dates),
+                               sw$dates),wnd$dates)
+    dates <- as.POSIXct(idx,origin = "1970-01-01")
+    varL <- length(dates)
+    rh$dat <- rh$dat[is.element(rh$dates,idx)]
+    airT$dat <- airT$dat[is.element(airT$dates,idx)]
+    wt$dat <- wt$dat[is.element(wt$dates,idx)]
+    sw$dat <- sw$dat[is.element(sw$dates,idx)]
+    wnd$dat <- wnd$dat[is.element(wnd$dates,idx)]
+    wt$dates <- as.POSIXct(idx,origin = "1970-01-01")
+    sw$dates <- as.POSIXct(idx,origin = "1970-01-01")
+    rh$dates <- as.POSIXct(idx,origin = "1970-01-01")
+    airT$dates <- as.POSIXct(idx,origin = "1970-01-01")
+    wnd$dates <- as.POSIXct(idx,origin = "1970-01-01")
+  }
 
-  if !OC$TT$openRH && !OC$TT$openAirT && !OC$TT$openSW && !OC$TT$openWnd
-  if OC$TT$openWtr
-  dates <- wt$dates
-  varL <- length(dates)
-  end
-  end
+  if (!OC$TT$openRH && !OC$TT$openAirT && !OC$TT$openSW && !OC$TT$openWnd){
+    if (OC$TT$openWtr){
+      dates <- wt$dates
+      varL <- length(dates)
+    }
+  }
 
   # look for long-wave radiation data
-  if OC$TT$openLWnet
-  if exist([Folder '/' LakeName '.lwnet']) > 0
-  cat(['Reading ' LakeName '.lwnet file'])
-  lwnetFileName <- [Folder '/' LakeName '.lwnet']
-  fclose all
-  [lwnetD,lwnet] <- gFileOpen(lwnetFileName)
-  idx <- isnan(lwnet)
-  lwnet(idx) <- []
-  lwnetD(idx) <- []
-  cat('completed\n\n')
+  if (OC$TT$openLWnet){
+    if (file.exists(paste0(Folder, '/', LakeName, '.lwnet'))){
+      cat(paste0('Reading ', LakeName, '.lwnet file \n'))
+      lwnetFileName <- paste0(Folder, '/', LakeName, '.lwnet')
 
-  #*** find samplerate of raw data
-  if length(lwnetD) < smplTs
-  tLen <- length(lwnetD)
-  else
-    tLen <- smplTs
-  end
-  steps <- NaN(1,tLen-1)
-  for i <- 1:tLen-1
-  steps(i) <- lwnetD(i+1)-lwnetD(i)
-  end
-  if eq(min(steps),0)
-  matRs <- mean(steps)*matSec
-  else
-    matRs <- min(steps)*matSec #current sample rate of raw data in seconds
-  end
-  clear vals ind numMx numCont steps tLen
-  if (Cfg$outRs - matRs)>dateTl
-  OC$TT$dwnSmple <- TRUE   #down sample if necessary
-  end
+      lwnet <- gFileOpen(lwnetFileName)
+      idx <- is.na(lwnet$dat)
+      lwnet$dat <- lwnet$dat[!idx]
+      lwnet$dates <- lwnet$dates[!idx]
+      cat('completed\n\n')
 
-  # *** down sampling ***
-    if OC$TT$dwnSmple
-  cat(['Down sampling ' LakeName '.lwnet data'])
-  [DS_lwnetD,DS_lwnet] <- DownSample_TS(lwnetD,Cfg$outRs,lwnet)
-  lwnetD <- DS_lwnetD
-  lwnet <- DS_lwnet
-  varL <- length(lwnetD)
-  clear DS_lwnetD DS_lwnet
-  cat('completed\n\n')
-  end
+      #*** find samplerate of raw data
+      if (length(lwnet$dates) < smplTs){
+        tLen <- length(lwnet$dates)
+      } else {
+        tLen <- smplTs
+      }
+      steps <- rep(NA,tLen-1)
+      for (i in 1:(tLen-1)){
+        steps[i] <- lwnet$dates[i+1]-lwnet$dates[i]
+      }
+      if (min(steps)==0){
+        matRs <- mean(steps)*matSec
+      } else {
+        matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+      }
+      rm(idx,steps, tLen)
+      if ((Cfg$outRs - matRs)>dateTl){
+        OC$TT$dwnSmple <- TRUE   #down sample if necessary
+      }
 
-  else if exist([Folder '/' LakeName '.lw']) > 0
-  cat([LakeName '.lwnet files not found, looking for .lw file\n\n'])
-  cat(['Reading ' LakeName '.lw file'])
-  lwFileName  <- [Folder '/' LakeName '.lw']
-  fclose all
-  [lwD,lw] <- gFileOpen(lwFileName)
-  idx <- isnan(lw)
-  lw(idx) <- []
-  lwD(idx) <- []
-  cat('completed\n\n')
+      # *** down sampling ***
+      if (OC$TT$dwnSmple){
+        cat(paste0('Down sampling ', LakeName, '.lwnet data \n'))
+        DS_lwnet <- DownSample_TS(lwnet$dates,Cfg$outRs,lwnet$dat)
+        lwnet$dates <- DS_lwnet$DS_dates
+        lwnet$dat <- DS_lwnet$DS_varArray
+        varL <- length(lwnet$dates)
+        rm(DS_lwnet)
+        cat('completed\n\n')
+      }
 
-  #*** find samplerate of raw data
-  if length(lwD) < smplTs
-  tLen <- length(lwD)
-  else
-    tLen <- smplTs
-  end
-  steps <- NaN(1,tLen-1)
-  for i <- 1:tLen-1
-  steps(i) <- lwD(i+1)-lwD(i)
-  end
-  if eq(min(steps),0)
-  matRs <- mean(steps)*matSec
-  else
-    matRs <- min(steps)*matSec #current sample rate of raw data in seconds
-  end
-  clear vals ind numMx numCont steps tLen
-  if (Cfg$outRs - matRs)>dateTl
-  OC$TT$dwnSmple <- TRUE   #down sample if necessary
-  end
+    } else {
+        if (file.exists(paste0(Folder, '/', LakeName, '.lw'))){
+          cat(paste0(LakeName, '.lwnet files not found, looking for .lw file\n\n'))
+          cat(paste0('Reading ', LakeName, '.lw file \n'))
+          lwFileName  <- paste(Folder, '/', LakeName, '.lw')
 
-  # *** down sampling ***
-    if OC$TT$dwnSmple
-  cat(['Down sampling ' LakeName '.lw data'])
-  [DS_lwD,DS_lw] <- DownSample_TS(lwD,Cfg$outRs,lw)
-  lwD <- DS_lwD
-  lw <- DS_lw
-  varL <- length(lwD)
-  clear DS_lwD DS_lw
-  cat('completed\n\n')
-  end
+          lw <- gFileOpen(lwFileName)
+          idx <- is.na(lw$dat)
+          lw$dat <- lw$dat[!idx]
+          lw$dates <- lw$dates[!idx]
+          cat('completed\n\n')
 
-  # find when wtr and lw dates intersect
-  idx <- intersect(wt$dates,lwD)
-  lw <- lw(ismember(lwD,idx))
-  wt$dat <- wt$dat(ismember(wt$dates,idx))
-  wt$dates <- idx
+          #*** find samplerate of raw data
+          if (length(lw$dates) < smplTs){
+            tLen <- length(lw$dates)
+          } else {
+            tLen <- smplTs
+          }
+          steps <- rep(NA,tLen-1)
+          for (i in 1:(tLen-1)){
+            steps[i] <- lw$dates[i+1]-lw$dates[i]
+          }
+          if (min(steps)==0){
+            matRs <- mean(steps)*matSec
+          } else {
+            matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+          }
+          rm(idx, steps, tLen)
+          if ((Cfg$outRs - matRs)>dateTl){
+            OC$TT$dwnSmple <- TRUE   #down sample if necessary
+          }
 
-  Tk <- wt$dat + 273.13 # .wtr already called at this point
-  emiss <- 0.972
-  S_B <- 5.67E-8
-  LWo <- S_B*emiss*Tk.^4
+          # *** down sampling ***
+          if (OC$TT$dwnSmple){
+            cat(paste0('Down sampling ', LakeName, '.lw data \n'))
+            DS_lw <- DownSample_TS(lw$dates,Cfg$outRs,lw$dat)
+            lw$dates <- DS_lwD$DS_dates
+            lw <- DS_lw$DS_varArray
+            varL <- length(lw$dates)
+            rm(DS_lw)
+            cat('completed\n\n')
+          }
 
-  # define lwnet
-  lwnet <- lw - LWo
-  lwnet <- lwnet
-  lwnetD <- idx
-  else
-    cat(['' LakeName '.lwnet and .lw file missing, using .airT, .rh, .sw, .wtr instead\n\n'])
+          # find when wtr and lw dates intersect
+          idx <- intersect(wt$dates,lw$dates)
+          lw$dat <- lw$dat[is.element(lw$dates,idx)]
+          wt$dat <- wt$dat[is.element(wt$dates,idx)]
+          wt$dates <- as.POSIXct(idx,origin = "1970-01-01")
 
-  press <- 101325.*(1 - 2.25577e-5.*Cfg$alt).^5.25588 # Pa
-  press <- press./100 # mb
-  [!,!,Qlnet] <- calc_lwnet(dates,Cfg$lat,press,airT,rh,sw,wt$dat)
-  lwnet <- Qlnet
-  lwnetD <- dates
-  end
-  end
-  end
+          Tk <- wt$dat + 273.13 # .wtr already called at this point
+          emiss <- 0.972
+          S_B <- 5.67E-8
+          LWo <- S_B*emiss*Tk^4
+
+          # define lwnet
+          lwnet <- list()
+          lwnet$dat <- lw$dat - LWo
+          lwnet$dates <- as.POSIXct(idx,origin = "1970-01-01")
+        } else {
+          cat(paste0('',LakeName,
+                     '.lwnet and .lw file missing, using .airT, .rh, .sw, .wtr instead\n\n'))
+          press <- 101325*(1 - 2.25577E-5*Cfg$alt)^5.25588 # Pa
+          press <- press/100 # mb
+          Qlnet <- calc_lwnet(dates,Cfg$lat,press,airT$dat,rh$dat,sw$dat,wt$dat)$lwnet
+          lwnet <- list()
+          lwnet$dat <- Qlnet
+          lwnet$dates <- dates
+        }
+    }
+  }
 
   # re-adjust dates depending on lw and lwnet files
-  if OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW && OC$TT$openLWnet
-  idx <- intersect(intersect(intersect(intersect(rhD,airTD),wt$dates),swD),lwnetD)
-  dates <- idx
-  varL <- length(dates)
-  rh <- rh(ismember(rhD,idx))
-  airT <- airT(ismember(airTD,idx))
-  wt$dat <- wt$dat(ismember(wt$dates,idx))
-  sw <- sw(ismember(swD,idx))
-  lwnet <- lwnet(ismember(lwnetD,idx))
-  wt$dates <- idx
-  swD <- idx
-  rhD <- idx
-  airTD <- idx
-  lwnetD <- idx
-  end
+  if (OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW && OC$TT$openLWnet){
+    idx <- intersect(intersect(intersect(intersect(rh$dates,airT$dates),
+                                         wt$dates),sw$dates),lwnet$dates)
+    dates <- as.POSIXct(idx,origin="1970-01-01")
+    varL <- length(dates)
+    rh$dat <- rh$dat[is.element(rh$dates,idx)]
+    airT$dat <- airT$dat[is.element(airT$dates,idx)]
+    wt$dat <- wt$dat[is.element(wt$dates,idx)]
+    sw$dat <- sw$dat[is.element(sw$dates,idx)]
+    lwnet$dat <- lwnet$dat[is.element(lwnet$dates,idx)]
+    wt$dates <- as.POSIXct(idx,origin="1970-01-01")
+    sw$dates <- as.POSIXct(idx,origin="1970-01-01")
+    rh$dates <- as.POSIXct(idx,origin="1970-01-01")
+    airT$dates <- as.POSIXct(idx,origin="1970-01-01")
+    lwnet$dates <- as.POSIXct(idx,origin="1970-01-01")
+  }
 
-  if OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW && OC$TT$openLWnet && OC$TT$openWnd
-  idx <- intersect(intersect(intersect(intersect(intersect(rhD,airTD),wt$dates),swD),lwnetD),wndD)
-  dates <- idx
-  varL <- length(dates)
-  rh <- rh(ismember(rhD,idx))
-  airT <- airT(ismember(airTD,idx))
-  wt$dat <- wt$dat(ismember(wt$dates,idx))
-  sw <- sw(ismember(swD,idx))
-  lwnet <- lwnet(ismember(lwnetD,idx))
-  wnd <- wnd(ismember(wndD,idx))
-  wt$dates <- idx
-  swD <- idx
-  rhD <- idx
-  airTD <- idx
-  lwnetD <- idx
-  wndD <- idx
-  end
+  if( OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW &&
+      OC$TT$openLWnet && OC$TT$openWnd){
+    idx <- intersect(intersect(intersect(intersect(intersect(rh$dates,airT$dates),wt$dates),
+                                         sw$dates),lwnet$dates),wnd$dates)
+    dates <- idx
+    varL <- length(dates)
+    rh$dat <- rh$dat[is.element(rh$dates,idx)]
+    airT <- airT[is.element(airT$dates,idx)]
+    wt$dat <- wt$dat[is.element(wt$dates,idx)]
+    sw$dat <- sw$dat[is.element(sw$dates,idx)]
+    lwnet$dat <- lwnet$dat[is.element(lwnet$dates,idx)]
+    wnd$dat <- wnd$dat[is.element(wnd$dates,idx)]
+    wt$dates <- as.POSIXct(idx,origin="1970-01-01")
+    sw$dates <- as.POSIXct(idx,origin="1970-01-01")
+    rh$dates <- as.POSIXct(idx,origin="1970-01-01")
+    airT$dates <- as.POSIXct(idx,origin="1970-01-01")
+    lwnet$dates <- as.POSIXct(idx,origin="1970-01-01")
+    wnd$dates <- as.POSIXct(idx,origin="1970-01-01")
+  }
 
   # if data isn't downsampled, define times and variable length
-  if !OC$TT$dwnSmple
-  if OC$TT$openWtr
-  dates <- wt$dates
-  varL <- length(dates)
-  end
-  if OC$TT$openAirT
-  dates <- airTD
-  varL <- length(dates)
-  end
-  if OC$TT$openRH
-  dates <- rhD
-  varL <- length(dates)
-  end
-  if OC$TT$openSW
-  dates <- swD
-  varL <- length(dates)
-  end
-  if OC$TT$openWnd
-  dates <- wndD
-  varL <- length(dates)
-  end
-  if OC$TT$openLWnet
-  dates <- lwnetD
-  varL <- length(dates)
-  end
-  end
+  if (!OC$TT$dwnSmple){
+    if (OC$TT$openWtr){
+      dates <- wt$dates
+      varL <- length(dates)
+    }
+    if (OC$TT$openAirT){
+      dates <- airT$dates
+      varL <- length(dates)
+    }
+    if (OC$TT$openRH){
+      dates <- rh$dates
+      varL <- length(dates)
+    }
+    if (OC$TT$openSW){
+      dates <- sw$dates
+      varL <- length(dates)
+    }
+    if (OC$TT$openWnd){
+      dates <- wnd$dates
+      varL <- length(dates)
+    }
+    if (OC$TT$openLWnet){
+      dates <- lwnet$dates
+      varL <- length(dates)
+    }
+  }
 
   #****-----varL is the length of output files as of here-------*****
   # water temperature
-  if OC$TT$wrt_wTemp
-  OC$OC$writeTable$wTemp <- wt$dat
-  end
+  if (OC$TT$wrt_wTemp){
+    OC$OC$writeTable$wTemp <- wt$dat
+  }
 
   # calculate surface fluxes
-  if OC$TT$senslatYes || OC$TT$QtotYes
-  mm <- sens_latent(wt$dat,wnd,airT,rh,Cfg$wndH,Cfg$htH,Cfg$hqH,Cfg$alt,Cfg$lat)
-  end
+  if (OC$TT$senslatYes || OC$TT$QtotYes){
+    mm <- sens_latent(wt$dat,wnd$dat,airT$dat,rh$dat,Cfg$wndH,Cfg$htH,Cfg$hqH,Cfg$alt,Cfg$lat)
+  }
 
   # atmospheric stability
-  if OC$TT$wrt_obu
-  zL1 <- Cfg$wndH./mm(:,35)
-  zL1(zL1 > 15) <- 15
-  zL1(zL1 < -15) <- -15
-  OC$OC$writeTable$obu <- zL1
-  end
+  if (OC$TT$wrt_obu){
+    zL1 <- Cfg$wndH/mm[,35]
+    zL1[zL1 > 15] <- 15
+    zL1[zL1 < -15] <- -15
+    OC$OC$writeTable$obu <- zL1
+  }
 
   # momentum flux
-  if OC$TT$wrt_tau
-  OC$OC$writeTable$tau <- mm(:,1)
-  end
+  if (OC$TT$wrt_tau){
+    OC$OC$writeTable$tau <- mm[,1]
+  }
 
   # sensible heat flux
-  if OC$TT$wrt_Qh || OC$TT$QtotYes
-  Qh <- mm(:,3)
-  if OC$TT$wrt_Qh
-  OC$OC$writeTable$Qh <- Qh
-  end
-  end
+  if (OC$TT$wrt_Qh || OC$TT$QtotYes){
+    Qh <- mm[,3]
+    if (OC$TT$wrt_Qh){
+      OC$OC$writeTable$Qh <- Qh
+    }
+  }
 
   # latent heat flux
-  if OC$TT$wrt_Qe || OC$TT$QtotYes
-  Qe <- mm(:,2)
-  if OC$TT$wrt_Qe
-  OC$OC$writeTable$Qe <- Qe
-  end
-  end
+  if (OC$TT$wrt_Qe || OC$TT$QtotYes){
+    Qe <- mm[,2]
+    if (OC$TT$wrt_Qe){
+      OC$OC$writeTable$Qe <- Qe
+    }
+  }
 
   # air shear velocity
-  if OC$TT$wrt_uSt_a
-  OC$OC$writeTable$uSt_a <- mm(:,4)
-  end
+  if (OC$TT$wrt_uSt_a){
+    OC$OC$writeTable$uSt_a <- mm[,4]
+  }
 
   # air shear velocity (neutral)
-  if OC$TT$wrt_uSt_aN
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$uSt_aN <- mm2(:,1)
-  end
+  if (OC$TT$wrt_uSt_aN){
+    mm2 <- neutral_transfer_coeff(Uz = wnd$dat,hu = Cfg$wndH)
+    OC$OC$writeTable$uSt_aN <- mm2[,1]
+  }
 
   # wind speed at 10 m
-  if OC$TT$wrt_u10
-  OC$OC$writeTable$u10 <- mm(:,7)
-  end
+  if (OC$TT$wrt_u10){
+    OC$OC$writeTable$u10 <- mm[,7]
+  }
 
   # wind speed at 10 m (neutral)
-  if OC$TT$wrt_u10N
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$u10N <- mm2(:,2)
-  end
+  if (OC$TT$wrt_u10N){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$u10N <- mm2[,2]
+  }
 
   # air temperature at 10 m
-  if OC$TT$wrt_t10
-  OC$OC$writeTable$t10 <- mm(:,8)
-  end
+  if (OC$TT$wrt_t10){
+    OC$OC$writeTable$t10 <- mm[,8]
+  }
 
   # relative humidity at 10 m
-  if OC$TT$wrt_rh10
-  OC$OC$writeTable$rh10 <- mm(:,10)
-  end
+  if (OC$TT$wrt_rh10){
+    OC$OC$writeTable$rh10 <- mm[,10]
+  }
 
   # transfer coefficient for momentum
-  if OC$TT$wrt_C_D
-  OC$OC$writeTable$C_D <- mm(:,14)
-  end
+  if (OC$TT$wrt_C_D){
+    OC$OC$writeTable$C_D <- mm[,14]
+  }
 
   # transfer coefficient for heat
-  if OC$TT$wrt_C_E
-  OC$OC$writeTable$C_E <- mm(:,15)
-  end
+  if (OC$TT$wrt_C_E){
+    OC$OC$writeTable$C_E <- mm[,15]
+  }
 
   # transfer coefficient for humidity
-  if OC$TT$wrt_C_H
-  OC$OC$writeTable$C_H <- mm(:,16)
-  end
+  if (OC$TT$wrt_C_H){
+    OC$OC$writeTable$C_H <- mm[,16]
+  }
 
   # transfer coefficient for momentum at 10 m
-  if OC$TT$wrt_C_D10
-  OC$OC$writeTable$C_D10 <- mm(:,17)
-  end
+  if (OC$TT$wrt_C_D10){
+    OC$OC$writeTable$C_D10 <- mm[,17]
+  }
 
   # transfer coefficient for heat at 10 m
-  if OC$TT$wrt_C_E10
-  OC$OC$writeTable$C_E10 <- mm(:,18)
-  end
+  if (OC$TT$wrt_C_E10){
+    OC$OC$writeTable$C_E10 <- mm[,18]
+  }
 
   # transfer coefficient for humidity at 10 m
-  if OC$TT$wrt_C_H10
-  OC$OC$writeTable$C_H10 <- mm(:,19)
-  end
+  if (OC$TT$wrt_C_H10){
+    OC$OC$writeTable$C_H10 <- mm[,19]
+  }
 
   # neutral transfer coefficient for momentum
-  if OC$TT$wrt_C_D10N
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$C_D10N <- mm2(:,3)
-  end
+  if (OC$TT$wrt_C_D10N){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$C_D10N <- mm2[,3]
+  }
 
   # neutral drag coefficient for heat
-  if OC$TT$wrt_C_E10N
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$C_E10N <- mm2(:,4)
-  end
+  if (OC$TT$wrt_C_E10N){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$C_E10N <- mm2[,4]
+  }
 
   # neutral drag coefficient for humidity
-  if OC$TT$wrt_C_H10N
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$C_H10N <- mm2(:,5)
-  end
+  if (OC$TT$wrt_C_H10N){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$C_H10N <- mm2[,5]
+  }
 
   # neutral transfer coefficient for momentum
-  if OC$TT$wrt_C_DN
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$C_DN <- mm2(:,6)
-  end
+  if (OC$TT$wrt_C_DN){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$C_DN <- mm2[,6]
+  }
 
   # neutral drag coefficient for heat
-  if OC$TT$wrt_C_EN
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$C_EN <- mm2(:,7)
-  end
+  if (OC$TT$wrt_C_EN){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$C_EN <- mm2[,7]
+  }
 
   # neutral drag coefficient for humidity
-  if OC$TT$wrt_C_HN
-  mm2 <- neutral_transfer_coeff(wnd,Cfg$wndH)
-  OC$OC$writeTable$C_HN <- mm2(:,8)
-  end
+  if (OC$TT$wrt_C_HN){
+    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    OC$OC$writeTable$C_HN <- mm2[,8]
+  }
 
   # evaporation
-  if OC$TT$wrt_Evap
-  OC$OC$writeTable$Evap <- mm(:,27)
-  end
+  if (OC$TT$wrt_Evap){
+    OC$OC$writeTable$Evap <- mm[,27]
+  }
 
   # net long wave heat flux
-  if OC$TT$wrt_Qlnet
-  OC$OC$writeTable$Qlnet <- lwnet
-  end
+  if (OC$TT$wrt_Qlnet){
+    OC$OC$writeTable$Qlnet <- lwnet$dat
+  }
 
   # incoming long wave heat flux
-  if OC$TT$wrt_Qlin
-  press <- 101325.*(1 - 2.25577e-5.*Cfg$alt).^5.25588 # Pa
-  press <- press./100 # mb
-  [lw,!,!] <- calc_lwnet(dates,Cfg$lat,press,airT,rh,sw,wt$dat)
-  OC$OC$writeTable$Qlin <- lw
-  end
+  if (OC$TT$wrt_Qlin){
+    press <- 101325*(1 - 2.25577E-5*Cfg$alt)^5.25588 # Pa
+    press <- press/100 # mb
+    lwm <- calc_lwnet(dates,Cfg$lat,press,airT$dat,rh$dat,sw$dat,wt$dat)$lw
+    OC$OC$writeTable$Qlin <- lwm
+  }
 
   # outgoing long wave heat flux
-  if OC$TT$wrt_Qlout
-  Tk <- wt$dat + 273.13
-  emiss <- 0.972
-  S_B <- 5.67E-8
-  LWo <- S_B*emiss*Tk.^4
-  OC$OC$writeTable$Qlout <- LWo
-  end
+  if (OC$TT$wrt_Qlout){
+    Tk <- wt$dat + 273.13
+    emiss <- 0.972
+    S_B <- 5.67E-8
+    LWo <- S_B*emiss*Tk^4
+    OC$OC$writeTable$Qlout <- LWo
+  }
 
   # reflected short wave radiaiton
-  if OC$TT$wrt_Qsr || OC$TT$QtotYes
-  if Cfg$outRs >= 86400
-  datev <- datevec(dates)
-  datev(:,4) <- 12
-  dates2 <- datenum(datev)
-  sw_alb <- sw_albedo(dates2,Cfg$lat)
-  else
-  sw_alb <- sw_albedo(dates,Cfg$lat)
-  end
-  Qsr <- sw.*sw_alb # reflected short wave radiation
-  if OC$TT$wrt_Qsr
-  OC$OC$writeTable$Qsr <- Qsr
-  end
-  end
+  if (OC$TT$wrt_Qsr || OC$TT$QtotYes){
+    if (Cfg$outRs >= 86400){
+      #datev <- datevec(dates)
+      #datev[,4] <- 12
+      dates2 <- as.POSIXct(paste0(format(dates,"%Y-%m-%d")," 12:00"))
+      sw_alb <- sw_albedo(dates2,Cfg$lat)
+    } else {
+      sw_alb <- sw_albedo(dates,Cfg$lat)
+    }
+    Qsr <- sw$dat*sw_alb # reflected short wave radiation
+    if (OC$TT$wrt_Qsr){
+      OC$OC$writeTable$Qsr <- Qsr
+    }
+  }
 
   # total surface heat flux
-  if OC$TT$wrt_Qtot
-  # Qtot <- sw - Qsr - Qe - Qh + lwnet
-  Qtot <- sw - Qsr - Qe - Qh + lw - LWo
-  OC$OC$writeTable$Qtot <- Qtot
-  end
+  if (OC$TT$wrt_Qtot){
+    # Qtot <- sw - Qsr - Qe - Qh + lwnet
+    Qtot <- sw$dat - Qsr - Qe - Qh + lwm - LWo
+    OC$OC$writeTable$Qtot <- Qtot
+  }
 
   # short wave radiation
-  if OC$TT$wrt_Qs
-  OC$OC$writeTable$Qs <- sw
-  end
+  if (OC$TT$wrt_Qs){
+    OC$OC$writeTable$Qs <- sw$dat
+  }
 
   # short wave radiation
-  if OC$TT$wrt_Qsin
-  if Cfg$outRs >= 86400 # quick fix for >daily averages
-  datev <- datevec(dates)
-  datev(:,4) <- 12
-  dates2 <- datenum(datev)
-  sw_alb <- sw_albedo(dates2,Cfg$lat)
-  else
-  sw_alb <- sw_albedo(dates,Cfg$lat)
-  end
-  Qsr <- sw.*sw_alb # reflected short wave radiation
-  OC$OC$writeTable$Qsin <- sw - Qsr
-  end
+  if (OC$TT$wrt_Qsin){
+    if (Cfg$outRs >= 86400) {# quick fix for >daily averages
+      ## needs translation ##
+      #datev <- datevec(dates)
+      #datev(:,4) <- 12
+      #dates2 <- datenum(datev)
+      sw_alb <- sw_albedo(dates2,Cfg$lat)
+    } else {
+      sw_alb <- sw_albedo(dates,Cfg$lat)
+    }
+    Qsr <- sw$dat*sw_alb # reflected short wave radiation
+    OC$OC$writeTable$Qsin <- sw$dat - Qsr
+  }
 
   # air density 10 m
-  if OC$TT$wrt_rhoa10
-  airT10 <- mm(:,8)
-  rh10 <- mm(:,10)
-  press <- 101325.*(1 - 2.25577e-5.*Cfg$alt).^5.25588 # Pa
-  press <- press./100 # mb
-  e_s <- 6.11.*exp(17.27.*airT10./(237.3 + airT10)) # saturated vapour pressure at ta, mb
-  e_a <- rh10.*e_s./100 # vapour pressure, mb
-  q_z <- 0.622.*e_a./press # specific humidity, kg kg-1
-  R_a <- 287.*(1 + 0.608.*q_z)
-  rhoa10 <- 100*press./(R_a.*(airT10 + 273.16))
-  OC$OC$writeTable$rhoa10 <- rhoa10
-  end
+  if (OC$TT$wrt_rhoa10){
+    airT10 <- mm[,8]
+    rh10 <- mm[,10]
+    press <- 101325*(1 - 2.25577e-5*Cfg$alt)^5.25588 # Pa
+    press <- press/100 # mb
+    e_s <- 6.11*exp(17.27*airT10/(237.3 + airT10)) # saturated vapour pressure at ta, mb
+    e_a <- rh10*e_s/100 # vapour pressure, mb
+    q_z <- 0.622*e_a/press # specific humidity, kg kg-1
+    R_a <- 287*(1 + 0.608*q_z)
+    rhoa10 <- 100*press/(R_a*(airT10 + 273.16))
+    OC$OC$writeTable$rhoa10 <- rhoa10
+  }
 
   # water density
-  if OC$TT$wrt_rhow
-  rhow <- 1000*(1-1.9549*0.00001*abs(wt$dat-3.84).^1.68)
-  OC$OC$writeTable$rhow <- rhow
-  end
+  if (OC$TT$wrt_rhow){
+    rhow <- 1000*(1-1.9549*0.00001*abs(wt$dat-3.84)^1.68)
+    OC$OC$writeTable$rhow <- rhow
+  }
 
   # air density
-  if OC$TT$wrt_rhoa
-  press <- 101325.*(1 - 2.25577e-5.*Cfg$alt).^5.25588 # Pa
-  press <- press./100 # mb
-  e_s <- 6.11.*exp(17.27.*airT./(237.3 + airT)) # saturated vapour pressure at ta, mb
-  e_a <- rh.*e_s./100 # vapour pressure, mb
-  q_z <- 0.622.*e_a./press # specific humidity, kg kg-1
-  R_a <- 287.*(1 + 0.608.*q_z)
-  rhoa <- 100*press./(R_a.*(airT + 273.16))
-  OC$OC$writeTable$rhoa <- rhoa
-  end
+  if (OC$TT$wrt_rhoa){
+    press <- 101325*(1 - 2.25577e-5*Cfg$alt)^5.25588 # Pa
+    press <- press/100 # mb
+    e_s <- 6.11*exp(17.27*airT$dat/(237.3 + airT$dat)) # saturated vapour pressure at ta, mb
+    e_a <- rh$dat*e_s/100 # vapour pressure, mb
+    q_z <- 0.622*e_a/press # specific humidity, kg kg-1
+    R_a <- 287*(1 + 0.608*q_z)
+    rhoa <- 100*press/(R_a*(airT$dat + 273.16))
+    OC$OC$writeTable$rhoa <- rhoa
+  }
 
   # build plot array
-  if Cfg$plotYes
-  cat('Plotting results')
-  plotLA_results(OC$writeTable,OC$plotTable,dates,LakeName,Folder)
-  cat('completed\n\n')
-  end
+  if (Cfg$plotYes){
+    cat('Plotting results \n')
+    plotLA_results(OC$writeTable,OC$plotTable,dates,LakeName,Folder)
+    cat('completed\n\n')
+  }
 
   # build file array
-  writeNames <- {}
+  writeNames <- list()
   cnt <- 1
-  for k <- 1:length(OC$outputOptions)
-  if !islogical(OC$OC$writeTable$(char(OC$outputOptions{k})))
-  writeNames{cnt} <- OC$outputOptions{k}
-  cnt <- cnt+1
-  end
-  end
+  for (k in 1:length(OC$outputOptions)){
+    if (length(OC$OC$writeTable[[OC$outputOptions[k]]])>0){
+      writeNames[[cnt]] <- OC$outputOptions[k]
+      cnt <- cnt+1
+    }
+  }
 
   # write to file
-  if Cfg$writeYes
-  cat('Writing results to file')
-  end
-
-  if Cfg$writeYes && !isempty(writeNames)
-  outputFile <- [Folder '/' LakeName '_results.txt']
-  outFile <- fopen(outputFile,'w')
-  if eq(outFile,-1)
-  error([Folder '/' LakeName '_results.csv file in use, please close'])
-  end
-  wrt <- @(writer)cat(outFile,writer) # build a subfunction that writes
-  # the contents of the input "writer"
-  # to the file everytime wrt is called
-  wrt('DateTime')
-  for i <- 1:cnt-1
-  wrt([OC$delimO writeNames{i} OC$plotTable[[writeNames[i]]][YLabel][]])
-  end
-  wrt('\r\n')
-  for j <- 1:varL
-  wrt(datestr(dates(j),OC$dateOutput)) #change 'dateOutput'
-  # in the 'OutputConstructor.m' file
-  for i <- 1:length(writeNames)
-  wrt([OC$delimO num2str(OC$OC$writeTable$(char(writeNames{i}))(j))])
-  end
-  wrt('\r\n')
-  end
-  fclose all
-  end
-  if Cfg$writeYes
-  cat('completed\n\n')
-  end
-  disp('Lake Heat Flux Analyzer is complete')
+  if (Cfg$writeYes){
+    cat('Writing results to file \n')
+  }
+  ##herehere##
+  if (Cfg$writeYes && length(writeNames)>0){
+    outputFile <- paste0(Folder, '/', LakeName, '_results.txt')
+    outFile <- file(outputFile)
+    if (isOpen(outFile)){
+      stop(paste0(Folder, '/', LakeName, '_results.csv file in use, please close'))
+    }
+    close(outFile)
+    #wrt <- function(writer,ap=TRUE){cat(writer,file = outputFile,append = ap)} # build a subfunction that writes
+    # the contents of the input "writer"
+    # to the file everytime wrt is called
+    #wrt('DateTime',ap=FALSE)
+    coln <- 'DateTime'
+    for (i in 1:(cnt-1)){
+      #wrt(paste0(OC$delimO," ", writeNames[[i]], OC$plotTable[[writeNames[[i]]]]["YLabel"],
+      #          collapse = ""))
+      coln <- c(coln,paste0(writeNames[[i]], OC$plotTable[[writeNames[[i]]]]["YLabel"],
+                 collapse = ""))
+    }
+    #wrt('\r\n')
+    #for (j in 1:varL){
+      #wrt(format(dates[j],OC$dateOutput)) #change 'dateOutput'
+      # in the 'OutputConstructor.m' file
+      data_out <- data.frame(format(dates,OC$dateOutput))
+      for (i in 1:length(writeNames)){
+        #wrt(paste0(OC$delimO," ", as.numeric(OC$OC$writeTable[[writeNames[[i]]]][j]),
+        #            collapse=""))
+        data_out <- cbind(data_out,as.numeric(OC$OC$writeTable[[writeNames[[i]]]]))
+      }
+      #wrt('\r\n')
+    #}
+  colnames(data_out) <- coln
+  data_out[,2:length(writeNames)] <- round(data_out[,2:length(writeNames)],7)
+  write.table(data_out,outputFile,sep = OC$delimO,row.names = FALSE)
+  }
+  if (Cfg$writeYes){
+    cat('completed\n\n')
+  }
+  cat('Lake Heat Flux Analyzer is complete \n\n')
   #profile off
   #profile viewer
-  end
+}

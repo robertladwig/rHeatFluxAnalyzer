@@ -2,6 +2,7 @@
 #'
 #' @param LakeName Name of the Lake. Forcing and config file must have the same name
 #' @param folder Folder where the config file is stored
+#' @export
 #' @return Returns a list with options from the config file
 
 OpenCfg <- function(LakeName,folder){
@@ -13,6 +14,7 @@ OpenCfg <- function(LakeName,folder){
 
   Test <- gsub("\t","",readLines(fileName))
   Test <- gsub("#.*","",Test)
+  Test[5:length(Test)] <- gsub(" ","",Test[5:length(Test)])
 
   #TPuts <-  sub("\t","",sub(" ","",unlist(strsplit(x = readLines(fID,n = 3)[3],split = ","))))
   tOut <- unlist(strsplit(x = Test[3],split = ","))

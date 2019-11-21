@@ -1,9 +1,6 @@
-
-
 #' Function to get Smith Gamma
 #'
 #' @name getSmithGamma
-#' @usage
 #' @param lat Latitude
 #' @param time time as POSIXct format
 #' @return Smiths Gamma

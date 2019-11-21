@@ -2,7 +2,7 @@
 
 #' albedo for short wave radiation for given latitude and time of year
 #'
-#' @name sw_alb
+#' @name sw_albedo
 #' @param lat latitude in degrees North.
 #' @param time date as a POSIXct object in UTC time zone(???)
 #' @return numeric vector of albedo for short wave radiation for given latitude and time of year
@@ -14,7 +14,7 @@
 #'  time <- as.POSIXct("2001-10-10",tz="UTC")
 #'  sw_alb(lat,time)
 
-sw_alb <-  function(time,lat){
+sw_albedo <-  function(time,lat){
 
 
 
