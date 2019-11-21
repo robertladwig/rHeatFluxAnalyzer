@@ -179,7 +179,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
     }
     dates <- wnd$dates
   }
-  ##+++++++++++++++++++++ here I am +++++++++++++++++++++++++++##
+
   if (OC$TT$openSW){
     if (file.exists(paste0(Folder, '/', LakeName, '.sw'))){
       cat(paste0('Reading ', LakeName, '.sw file'))
@@ -379,10 +379,10 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
   if (!OC$TT$openSW){
     if (OC$TT$openWtr && OC$TT$openWnd && OC$TT$openRH && OC$TT$openAirT){
       idx <- intersect(intersect(intersect(wt$dates,wnd$dates),rh$dates),airT$dates)
-      dates <- idx
+      dates <- as.POSIXct(idx,origin = "1970-01-01")
       varL <- length(dates)
       wt$dat <- wt$dat[is.element(wt$dates,idx)]
-      wnd$dat <- wnd$dat[is.element(wnd$dat,idx)]
+      wnd$dat <- wnd$dat[is.element(wnd$dates,idx)]
       rh$dat <- rh$dat[is.element(rh$dat,idx)]
       airT$dat <- airT$dat[is.element(airT$dates,idx)]
       wt$dates <- as.POSIXct(idx,origin = "1970-01-01")
@@ -395,7 +395,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
   if (!OC$TT$openWnd){
     if (OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW){
       idx <- intersect(intersect(intersect(rh$dates,airT$dates),wt$dates),sw$dates)
-      dates <- idx
+      dates <- as.POSIXct(idx,origin = "1970-01-01")
       varL <- length(dates)
       rh$dat <- rh$dat[is.element(rh$dates,idx)]
       airT$dat <- airT$dat[is.element(airT$dates,idx)]
@@ -409,19 +409,20 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
   }
 
   if (OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW && OC$TT$openWnd){
-    idx <- intersect(intersect(intersect(intersect(rh$dates,airT$dates),wt$dates),sw$dates),wnd$dat)
-    dates <- idx
+    idx <- intersect(intersect(intersect(intersect(rh$dates,airT$dates),wt$dates),
+                               sw$dates),wnd$dates)
+    dates <- as.POSIXct(idx,origin = "1970-01-01")
     varL <- length(dates)
     rh$dat <- rh$dat[is.element(rh$dates,idx)]
-    airT <- airT[is.element(airT$dates,idx)]
+    airT$dat <- airT$dat[is.element(airT$dates,idx)]
     wt$dat <- wt$dat[is.element(wt$dates,idx)]
     sw$dat <- sw$dat[is.element(sw$dates,idx)]
-    wnd$dat <- wnd$dat[is.element(wnd$dat,idx)]
+    wnd$dat <- wnd$dat[is.element(wnd$dates,idx)]
     wt$dates <- as.POSIXct(idx,origin = "1970-01-01")
     sw$dates <- as.POSIXct(idx,origin = "1970-01-01")
     rh$dates <- as.POSIXct(idx,origin = "1970-01-01")
     airT$dates <- as.POSIXct(idx,origin = "1970-01-01")
-    wnd$dat <- as.POSIXct(idx,origin = "1970-01-01")
+    wnd$dates <- as.POSIXct(idx,origin = "1970-01-01")
   }
 
   if (!OC$TT$openRH && !OC$TT$openAirT && !OC$TT$openSW && !OC$TT$openWnd){
@@ -430,6 +431,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
       varL <- length(dates)
     }
   }
+  #herehere#
   # look for long-wave radiation data
   if (OC$TT$openLWnet){
     if (file.exists(paste0(Folder, '/', LakeName, '.lwnet'))){
@@ -543,15 +545,15 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
         }
     }
   }
-  #herehere#
+
   # re-adjust dates depending on lw and lwnet files
   if (OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW && OC$TT$openLWnet){
     idx <- intersect(intersect(intersect(intersect(rh$dates,airT$dates),
                                          wt$dates),sw$dates),lwnet$dates)
-    dates <- idx
+    dates <- as.POSIXct(idx,origin="1970-01-01")
     varL <- length(dates)
     rh$dat <- rh$dat[is.element(rh$dates,idx)]
-    airT <- airT[is.element(airT$dates,idx)]
+    airT$dat <- airT$dat[is.element(airT$dates,idx)]
     wt$dat <- wt$dat[is.element(wt$dates,idx)]
     sw$dat <- sw$dat[is.element(sw$dates,idx)]
     lwnet$dat <- lwnet$dat[is.element(lwnet$dates,idx)]
@@ -562,10 +564,10 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
     lwnet$dates <- as.POSIXct(idx,origin="1970-01-01")
   }
 
-  if( OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW && 
+  if( OC$TT$openRH && OC$TT$openAirT && OC$TT$openWtr && OC$TT$openSW &&
       OC$TT$openLWnet && OC$TT$openWnd){
     idx <- intersect(intersect(intersect(intersect(intersect(rh$dates,airT$dates),wt$dates),
-                                         sw$dates),lwnet$dates),wnd$dat)
+                                         sw$dates),lwnet$dates),wnd$dates)
     dates <- idx
     varL <- length(dates)
     rh$dat <- rh$dat[is.element(rh$dates,idx)]
@@ -573,7 +575,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
     wt$dat <- wt$dat[is.element(wt$dates,idx)]
     sw$dat <- sw$dat[is.element(sw$dates,idx)]
     lwnet$dat <- lwnet$dat[is.element(lwnet$dates,idx)]
-    wnd$dat <- wnd$dat[is.element(wnd$dat,idx)]
+    wnd$dat <- wnd$dat[is.element(wnd$dates,idx)]
     wt$dates <- as.POSIXct(idx,origin="1970-01-01")
     sw$dates <- as.POSIXct(idx,origin="1970-01-01")
     rh$dates <- as.POSIXct(idx,origin="1970-01-01")
@@ -895,7 +897,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
       }
       wrt('\r\n')
     }
-   
+
   }
   if (Cfg$writeYes){
     cat('completed\n\n')
