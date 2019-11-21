@@ -4,7 +4,7 @@
 #' @param Folder Folder the forcing and config files are stored in
 #' @param skipLoad Use own config file (must then be placed in Folder)
 #' @export
-#' @examples Run_LHFA(LakeName="Esthwaite",Folder="../data",skipLoad=TRUE)
+#' @examples Run_LHFA(LakeName="Esthwaite",Folder="data",skipLoad=TRUE)
 
 Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
 #----Author: Jordan S Read 2009 ----
@@ -904,12 +904,12 @@ Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
     #}
   colnames(data_out) <- coln
   data_out[,2:length(writeNames)] <- round(data_out[,2:length(writeNames)],7)
-  write.table(data_out,outputFile,sep = OC$delimO,row.names = FALSE,quote = FALSE)
+  write.table(data_out,outputFile,sep = OC$delimO,row.names = FALSE)
   }
   if (Cfg$writeYes){
     cat('completed\n\n')
   }
-  cat('Lake Heat Flux Analyzer is complete')
+  cat('Lake Heat Flux Analyzer is complete \n\n')
   #profile off
   #profile viewer
 }

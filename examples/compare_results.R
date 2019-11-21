@@ -8,4 +8,10 @@ res_m$DateTime <- as.POSIXct(res_m$DateTime)
 res_r <- read.table("../data/Esthwaite_results.txt",header = TRUE,sep = "\t")
 res_r$DateTime <- as.POSIXct(res_r$DateTime)
 
+res_d <- res_m - res_r
 
+for (i in 1:34) {
+
+plot(res_m$DateTime,res_m[,i],'l')
+lines(res_r$DateTime,res_r[,i],col=2)
+}
