@@ -778,10 +778,9 @@ Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
   # reflected short wave radiaiton
   if (OC$TT$wrt_Qsr || OC$TT$QtotYes){
     if (Cfg$outRs >= 86400){
-      ## needs translation ##
       #datev <- datevec(dates)
       #datev[,4] <- 12
-      #dates2 <- datenum(datev)
+      dates2 <- as.POSIXct(paste0(format(dates,"%Y-%m-%d")," 12:00"))
       sw_alb <- sw_albedo(dates2,Cfg$lat)
     } else {
       sw_alb <- sw_albedo(dates,Cfg$lat)
@@ -843,11 +842,11 @@ Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
   if (OC$TT$wrt_rhoa){
     press <- 101325*(1 - 2.25577e-5*Cfg$alt)^5.25588 # Pa
     press <- press/100 # mb
-    e_s <- 6.11*exp(17.27*airT/(237.3 + airT)) # saturated vapour pressure at ta, mb
+    e_s <- 6.11*exp(17.27*airT$dat/(237.3 + airT$dat)) # saturated vapour pressure at ta, mb
     e_a <- rh$dat*e_s/100 # vapour pressure, mb
     q_z <- 0.622*e_a/press # specific humidity, kg kg-1
     R_a <- 287*(1 + 0.608*q_z)
-    rhoa <- 100*press/(R_a*(airT + 273.16))
+    rhoa <- 100*press/(R_a*(airT$dat + 273.16))
     OC$OC$writeTable$rhoa <- rhoa
   }
 
