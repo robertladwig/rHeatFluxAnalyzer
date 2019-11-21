@@ -27,7 +27,7 @@ OutputConstructor <- function(outputNames,pltMods){
   dateInput <-  'yyyy-mm-dd HH:MM'
   delimI <- '\t'
 
-  dateOutput  <- 'yyyy-mm-dd HH:MM'
+  dateOutput  <- '%Y-%m-%d %H:%M'
   delimO <- '\t'
 
   # Figure defaults

@@ -617,7 +617,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
   if (OC$TT$wrt_wTemp){
     OC$OC$writeTable$wTemp <- wt$dat
   }
-  #herehere#
+
   # calculate surface fluxes
   if (OC$TT$senslatYes || OC$TT$QtotYes){
     mm <- sens_latent(wt$dat,wnd$dat,airT$dat,rh$dat,Cfg$wndH,Cfg$htH,Cfg$hqH,Cfg$alt,Cfg$lat)
@@ -864,7 +864,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
   writeNames <- list()
   cnt <- 1
   for (k in 1:length(OC$outputOptions)){
-    if (!is.logical(OC$OC$writeTable[[OC$outputOptions[k]]])){
+    if (length(OC$OC$writeTable[[OC$outputOptions[k]]])>0){
       writeNames[[cnt]] <- OC$outputOptions[k]
       cnt <- cnt+1
     }
@@ -874,26 +874,29 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
   if (Cfg$writeYes){
     cat('Writing results to file \n')
   }
-
+  ##herehere##
   if (Cfg$writeYes && length(writeNames)>0){
     outputFile <- paste0(Folder, '/', LakeName, '_results.txt')
-    outFile <- file.exists(outputFile)
-    if (!outFile){
+    outFile <- file(outputFile)
+    if (isOpen(outFile)){
       stop(paste0(Folder, '/', LakeName, '_results.csv file in use, please close'))
     }
-    wrt <- function(writer){cat(outFile,writer)} # build a subfunction that writes
+    close(outFile)
+    wrt <- function(writer,ap=TRUE){cat(writer,file = outputFile,append = ap)} # build a subfunction that writes
     # the contents of the input "writer"
     # to the file everytime wrt is called
-    wrt('DateTime')
+    wrt('DateTime',ap=FALSE)
     for (i in 1:(cnt-1)){
-      wrt(list(OC$delimO, writeNames[i], OC$plotTable[[writeNames[i]]][YLabel][]))
+      wrt(paste0(OC$delimO," ", writeNames[[i]], OC$plotTable[[writeNames[[i]]]]["YLabel"],
+                 collapse = ""))
     }
     wrt('\r\n')
     for (j in 1:varL){
-      wrt(datestr(dates(j),OC$dateOutput)) #change 'dateOutput'
+      wrt(format(dates[j],OC$dateOutput)) #change 'dateOutput'
       # in the 'OutputConstructor.m' file
       for (i in 1:length(writeNames)){
-        wrt(list(OC$delimO, as.numeric(OC$OC$writeTable[[writeNames[i]]][j])))
+        wrt(paste0(OC$delimO," ", as.numeric(OC$OC$writeTable[[writeNames[[i]]]][j]),
+                    collapse=""))
       }
       wrt('\r\n')
     }
