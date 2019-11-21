@@ -431,7 +431,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
       varL <- length(dates)
     }
   }
-  #herehere#
+
   # look for long-wave radiation data
   if (OC$TT$openLWnet){
     if (file.exists(paste0(Folder, '/', LakeName, '.lwnet'))){
@@ -617,7 +617,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
   if (OC$TT$wrt_wTemp){
     OC$OC$writeTable$wTemp <- wt$dat
   }
-
+  #herehere#
   # calculate surface fluxes
   if (OC$TT$senslatYes || OC$TT$QtotYes){
     mm <- sens_latent(wt$dat,wnd$dat,airT$dat,rh$dat,Cfg$wndH,Cfg$htH,Cfg$hqH,Cfg$alt,Cfg$lat)
@@ -659,7 +659,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
 
   # air shear velocity (neutral)
   if (OC$TT$wrt_uSt_aN){
-    mm2 <- neutral_transfer_coeff(wnd$dat,Cfg$wndH)
+    mm2 <- neutral_transfer_coeff(Uz = wnd$dat,hu = Cfg$wndH)
     OC$OC$writeTable$uSt_aN <- mm2[,1]
   }
 

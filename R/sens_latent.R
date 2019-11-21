@@ -13,18 +13,29 @@
 #'  aerodynamic algorithms for the computation of sea surface fluxes using
 #'  TOGA COARE and TAO data. Journal of Climate 11: 2628-2644.
 
+
+
 sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
 
   # hardcoding limits seems critical to me...
   Uz[Uz < 0.2] <- 0.2
 
   # pre-define arrays
-  tstar <- rep(NA,length(Uz))
-  qstar <- rep(NA,length(Uz))
-  u10 <- rep(NA,length(Uz))
-  t10 <- rep(NA,length(Uz))
-  q10 <- rep(NA,length(Uz))
-  wc <- rep(NA,length(Uz))
+  tstar <- complex(length(Uz))
+  qstar <- complex(length(Uz))
+  u10 <- complex(length(Uz))
+  t10 <- complex(length(Uz))
+  q10 <- complex(length(Uz))
+  wc <- complex(length(Uz))
+  ts <- complex(real = ts)
+  Uz <- complex(real = Uz)
+  ta <- complex(real = ta)
+  rh <- complex(real = rh)
+  hu <- complex(real = hu)
+  ht <- complex(real = ht)
+  hq <- complex(real = hq)
+  alt <- complex(real = alt)
+  lat <- complex(real = lat)
   init_wnd <- Uz # initial wind speed
 
   # define constants
@@ -98,7 +109,7 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
   # calculate initial monin obukhov length scale, m
   obu <- (-rho_a*t_virt*(ustar*ustar*ustar))/(const_vonKarman*const_Gravity*
                                                 (ashN/const_SpecificHeatAir +
-                                    0.61*(ta + 273.16)*alhN/xlv))
+                                                   0.61*(ta + 273.16)*alhN/xlv))
 
   # iteration to compute corrections for atmospheric stability
   zeta_thres <- 15
@@ -111,16 +122,16 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
     zo <- (0.013*((ustar^2)/const_Gravity)) + (0.11*(KinV/ustar))
     re <- (ustar*zo)/KinV
     xq <- 2.67*re^0.25 - 2.57
-    xq[xq < 0] <- 0
+    xq[Re(xq) < 0] <- 0
     zoq <- zo/exp(xq)
     zot <- zoq
 
     # calculate ustar
     zeta <- hu/obu
-    zeta[zeta < -zeta_thres] <- -zeta_thres
-    zeta[zeta > zeta_thres] <- zeta_thres
+    zeta[Re(zeta) < -zeta_thres] <- -zeta_thres
+    zeta[Re(zeta) > zeta_thres] <- zeta_thres
 
-    zi <- zeta_indices(zeta,zetam,zetat)
+    zi <- zeta_indices(Re(zeta),zetam,zetat)
     idx_m_vu <- zi$idx_m_vu
     idx_m_u <- zi$idx_m_u
     idx_s <- zi$idx_s
@@ -128,7 +139,7 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
     rm(zi)
 
     ustar[idx_m_vu] <- (Uz[idx_m_vu]*const_vonKarman)/((log((zetam*obu[idx_m_vu])/zo[idx_m_vu]) -
-                          psi_zeng(1,zetam)) + 1.14*(((-zeta[idx_m_vu])^0.333) - ((-zetam)^0.333)))
+                                                          psi_zeng(1,zetam)) + 1.14*(((-zeta[idx_m_vu])^0.333) - ((-zetam)^0.333)))
 
     ustar[idx_m_u] <- (Uz[idx_m_u]*const_vonKarman)/(log(hu/zo[idx_m_u]) - psi_zeng(1,zeta[idx_m_u]))
 
@@ -139,10 +150,10 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
 
     # calculate tstar
     zeta <- ht/obu
-    zeta[zeta < -zeta_thres] <- -zeta_thres
-    zeta[zeta > zeta_thres] <- zeta_thres
+    zeta[Re(zeta) < -zeta_thres] <- -zeta_thres
+    zeta[Re(zeta) > zeta_thres] <- zeta_thres
 
-    zi <- zeta_indices(zeta,zetam,zetat)
+    zi <- zeta_indices(Re(zeta),zetam,zetat)
     idx_t_vu <- zi$idx_t_vu
     idx_t_u <- zi$idx_t_u
     idx_s <- zi$idx_s
@@ -150,24 +161,24 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
     rm(zi)
 
     tstar[idx_t_vu] <- (const_vonKarman*(ta[idx_t_vu] - ts[idx_t_vu]))/
-                       ((log((zetat*obu[idx_t_vu])/zot[idx_t_vu]) - psi_zeng(2,zetat)) +
-                       0.8*((-zetat)^-0.333 - ((-zeta[idx_t_vu]))^-0.333))
+      ((log((zetat*obu[idx_t_vu])/zot[idx_t_vu]) - psi_zeng(2,zetat)) +
+         0.8*((-zetat)^-0.333 - ((-zeta[idx_t_vu]))^-0.333))
 
     tstar[idx_t_u] <- (const_vonKarman*(ta[idx_t_u] - ts[idx_t_u]))/
-                      (log(ht/zot[idx_t_u]) - psi_zeng(2,zeta[idx_t_u]))
+      (log(ht/zot[idx_t_u]) - psi_zeng(2,zeta[idx_t_u]))
 
     tstar[idx_s] <- (const_vonKarman*(ta[idx_s] - ts[idx_s]))/
-                    (log(ht/zot[idx_s]) + 5*zeta[idx_s])
+      (log(ht/zot[idx_s]) + 5*zeta[idx_s])
 
     tstar[idx_vs] <- (const_vonKarman*(ta[idx_vs] - ts[idx_vs]))/
-                    ((log(obu[idx_vs]/zot[idx_vs]) + 5) + (5*log(zeta[idx_vs]) + zeta[idx_vs] - 1))
+      ((log(obu[idx_vs]/zot[idx_vs]) + 5) + (5*log(zeta[idx_vs]) + zeta[idx_vs] - 1))
 
     # calculate qstar
     zeta <- hq/obu
-    zeta[zeta < -zeta_thres] <- -zeta_thres
-    zeta[zeta > zeta_thres] <- zeta_thres
+    zeta[Re(zeta) < -zeta_thres] <- -zeta_thres
+    zeta[Re(zeta) > zeta_thres] <- zeta_thres
 
-    zi <- zeta_indices(zeta,zetam,zetat)
+    zi <- zeta_indices(Re(zeta),zetam,zetat)
     idx_t_vu <- zi$idx_t_vu
     idx_t_u <- zi$idx_t_u
     idx_s <- zi$idx_s
@@ -175,24 +186,24 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
     rm(zi)
 
     qstar[idx_t_vu] <- (const_vonKarman*(q_z[idx_t_vu] - q_s[idx_t_vu]))/
-                       ((log((zetat*obu[idx_t_vu])/zoq[idx_t_vu]) - psi_zeng(2,zetat)) +
-                       0.8*((-zetat)^-0.333 - ((-zeta[idx_t_vu]))^-0.333))
+      ((log((zetat*obu[idx_t_vu])/zoq[idx_t_vu]) - psi_zeng(2,zetat)) +
+         0.8*((-zetat)^-0.333 - ((-zeta[idx_t_vu]))^-0.333))
 
     qstar[idx_t_u] <- (const_vonKarman*(q_z[idx_t_u] - q_s[idx_t_u]))/
-                      (log(hq/zoq[idx_t_u]) - psi_zeng(2,zeta[idx_t_u]))
+      (log(hq/zoq[idx_t_u]) - psi_zeng(2,zeta[idx_t_u]))
 
     qstar[idx_s] <- (const_vonKarman*(q_z[idx_s] - q_s[idx_s]))/
-                    (log(hq/zoq[idx_s]) + 5*zeta[idx_s])
+      (log(hq/zoq[idx_s]) + 5*zeta[idx_s])
 
     qstar[idx_vs] <- (const_vonKarman*(q_z[idx_vs] - q_s[idx_vs]))/
-                     ((log(obu[idx_vs]/zoq[idx_vs]) + 5) + (5*log(zeta[idx_vs]) + zeta[idx_vs] - 1))
+      ((log(obu[idx_vs]/zoq[idx_vs]) + 5) + (5*log(zeta[idx_vs]) + zeta[idx_vs] - 1))
 
     # calculate zeta at 10 m
     zeta <- 10/obu
-    zeta[zeta < -zeta_thres] <- -zeta_thres
-    zeta[zeta > zeta_thres] <- zeta_thres
+    zeta[Re(zeta) < -zeta_thres] <- -zeta_thres
+    zeta[Re(zeta) > zeta_thres] <- zeta_thres
 
-    zi <- zeta_indices(zeta,zetam,zetat)
+    zi <- zeta_indices(Re(zeta),zetam,zetat)
     idx_m_vu <- zi$idx_m_vu
     idx_m_u <- zi$idx_m_u
     idx_t_vu <- zi$idx_t_vu
@@ -203,7 +214,7 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
 
     # calculate wind speed at 10 m
     u10[idx_m_vu] <- (ustar[idx_m_vu]/const_vonKarman)*((log((zetam*obu[idx_m_vu])/zo[idx_m_vu]) -
-                     psi_zeng(1,zetam)) + 1.14*(((-zeta[idx_m_vu])^0.333) - ((-zetam)^0.333)))
+                                                           psi_zeng(1,zetam)) + 1.14*(((-zeta[idx_m_vu])^0.333) - ((-zetam)^0.333)))
 
     u10[idx_m_u] <- (ustar[idx_m_u]/const_vonKarman)* (log(10/zo[idx_m_u]) -
                                                          psi_zeng(1,zeta[idx_m_u]))
@@ -215,21 +226,21 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
 
     # calcuate air temperature at 10 m
     t10[idx_t_vu] <- ((tstar[idx_t_vu]/const_vonKarman)*
-                     ((log((zetat*obu[idx_t_vu])/zot[idx_t_vu]) - psi_zeng(2,zetat)) +
-                       0.8*((-zetat)^-0.333 - ((-zeta[idx_t_vu]))^-0.333))) + ts[idx_t_vu]
+                        ((log((zetat*obu[idx_t_vu])/zot[idx_t_vu]) - psi_zeng(2,zetat)) +
+                           0.8*((-zetat)^-0.333 - ((-zeta[idx_t_vu]))^-0.333))) + ts[idx_t_vu]
 
     t10[idx_t_u] <- ((tstar[idx_t_u]/const_vonKarman)*
-                    log(10/zot[idx_t_u]) - psi_zeng(2,zeta[idx_t_u])) + ts[idx_t_u]
+                       log(10/zot[idx_t_u]) - psi_zeng(2,zeta[idx_t_u])) + ts[idx_t_u]
 
     t10[idx_s] <- ((tstar[idx_s]/const_vonKarman)*(log(10/zot[idx_s]) + 5*zeta[idx_s])) + ts[idx_s]
 
     t10[idx_vs] <- ((tstar[idx_vs]/const_vonKarman)*((log(obu[idx_vs]/zot[idx_vs]) + 5) +
-                   (5*log(zeta[idx_vs]) + zeta[idx_vs] - 1))) + ts[idx_vs]
+                                                       (5*log(zeta[idx_vs]) + zeta[idx_vs] - 1))) + ts[idx_vs]
 
     # calcuate specific humidity at 10 m
     q10[idx_t_vu] <- ((qstar[idx_t_vu]/const_vonKarman)*
                         ((log((zetat*obu[idx_t_vu])/zoq[idx_t_vu]) - psi_zeng(2,zetat)) +
-                        0.8*((-zetat)^-0.333 - ((-zeta[idx_t_vu]))^-0.333))) + q_s[idx_t_vu]
+                           0.8*((-zetat)^-0.333 - ((-zeta[idx_t_vu]))^-0.333))) + q_s[idx_t_vu]
 
     q10[idx_t_u] <- ((qstar[idx_t_u]/const_vonKarman)*(log(10/zoq[idx_t_u]) -
                                                          psi_zeng(2,zeta[idx_t_u]))) + q_s[idx_t_u]
@@ -237,7 +248,7 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
     q10[idx_s] <- ((qstar[idx_s]/const_vonKarman)*(log(10/zoq[idx_s]) + 5*zeta[idx_s])) + q_s[idx_s]
 
     q10[idx_vs] <- ((qstar[idx_vs]/const_vonKarman)*((log(obu[idx_vs]/zoq[idx_vs]) + 5) +
-                                          (5*log(zeta[idx_vs]) + zeta[idx_vs] - 1))) + q_s[idx_vs]
+                                                       (5*log(zeta[idx_vs]) + zeta[idx_vs] - 1))) + q_s[idx_vs]
 
     # calculate transfer coefficients corrected for atmospheric stability
     C_H <- (-rho_a*const_SpecificHeatAir*ustar*tstar)/(rho_a*const_SpecificHeatAir*Uz*(ts - ta))
@@ -256,18 +267,18 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
 
     # calculate new monin obukhov length
     obu <- (-rho_a*t_virt*(ustar*ustar*ustar))/
-           (const_Gravity*const_vonKarman*((ash/const_SpecificHeatAir) +
-                                             (0.61*(ta + 273.16)*alh/xlv)))
+      (const_Gravity*const_vonKarman*((ash/const_SpecificHeatAir) +
+                                        (0.61*(ta + 273.16)*alh/xlv)))
 
     # alter zeta in stable cases ?? is this the VERY stable?
     zeta <- hu/obu
-    zi <- zeta_indices(zeta,zetam,zetat)
+    zi <- zeta_indices(Re(zeta),zetam,zetat)
     idx_m_vu <- zi$idx_m_vu
     idx_m_u <- zi$idx_m_u
     idx_vs <- zi$idx_vs
     rm(zi)
 
-    Uz[idx_vs] <- max(c(Uz[idx_vs],0.1))
+    Uz[idx_vs] <- max(c(Re(Uz[idx_vs]),0.1),na.rm = TRUE)
 
     # avoid singularity at um <- 0 for unstable conditions
     idx <- idx_m_vu | idx_m_u # unstable
@@ -280,22 +291,22 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
   }
 
   # if the measurements are taken at a height of 10 m, keep original input data
-  if (hu == 10){
+  if (Re(hu) == 10){
     u10 <- init_wndend
   }
-  if (ht == 10){
+  if (Re(ht) == 10){
     t10 <- taend
   }
 
   # convert specific humidity to relative humidity
-  if (hq == 10){
+  if (Re(hq) == 10){
     rh10 <- rh
   } else {
     es <- 6.1121*exp(17.502*t10/(t10 + 240.97))*(1.0007+3.46e-6*press)
     em <- q10*press/(0.378*q10 + 0.622)
     rh10 <- 100*em/es
-    rh10[rh10 > 100] <- 100
-    rh10[rh10 < 0] <- 0
+    rh10[Re(rh10) > 100] <- 100
+    rh10[Re(rh10) < 0] <- 0
   }
 
   # calculate evaporation [mm/day]
@@ -335,7 +346,7 @@ psi_zeng <- function(k,zeta){
   chik <- (1 - 16*zeta)^0.25
   if( k == 1){
     psi_zeng <- 2*log((1 + chik)*0.5) + log((1+chik*chik)*0.5) -
-    2*atan(chik) + (pi/2)
+      2*atan(chik) + (pi/2)
   } else {
     psi_zeng <- 2*log((1 + chik*chik)*0.5)
   }
