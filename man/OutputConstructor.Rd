@@ -2,7 +2,7 @@
 % Please edit documentation in R/OutputConstructor.R
 \name{OutputConstructor}
 \alias{OutputConstructor}
-\title{Function to construct input data dependency}
+\title{Construct input data dependency}
 \usage{
 OutputConstructor(outputNames, pltMods)
 }
@@ -15,5 +15,5 @@ OutputConstructor(outputNames, pltMods)
 Returns a list with several tables and lists for further calculations
 }
 \description{
-Function to construct input data dependency
+Construct input data dependency
 }

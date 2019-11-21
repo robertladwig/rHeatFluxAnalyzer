@@ -3,6 +3,9 @@
 \name{clearSkySW}
 \alias{clearSkySW}
 \title{Calculate the clear sky short wave radiation}
+\usage{
+clearSkySW(time, lat, pressure = NULL, temperature = NULL, RH = NULL)
+}
 \arguments{
 \item{time}{Vector of times as POSIXct}
 
@@ -10,7 +13,7 @@
 
 \item{pressure}{Air pressure in (hPa) if available}
 
-\item{temperature}{Air temperature in (°C) if available}
+\item{temperature}{Air temperature in (degrees C) if available}
 
 \item{RH}{relative humidity in percentage if available}
 }

@@ -3,8 +3,11 @@
 \name{VaporPressure}
 \alias{VaporPressure}
 \title{calculate vapor pressure from relative humidity}
+\usage{
+VaporPressure(Temperature, RelativeHumidity)
+}
 \arguments{
-\item{Temperature}{Air temperature in °C}
+\item{Temperature}{Air temperature in degrees C}
 
 \item{RelativeHumidity}{Relative humidity as 0-1}
 }

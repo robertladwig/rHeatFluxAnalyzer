@@ -14,6 +14,7 @@ OpenCfg <- function(LakeName,folder){
 
   Test <- gsub("\t","",readLines(fileName))
   Test <- gsub("#.*","",Test)
+  Test[5:length(Test)] <- gsub(" ","",Test[5:length(Test)])
 
   #TPuts <-  sub("\t","",sub(" ","",unlist(strsplit(x = readLines(fID,n = 3)[3],split = ","))))
   tOut <- unlist(strsplit(x = Test[3],split = ","))

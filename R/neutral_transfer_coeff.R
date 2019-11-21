@@ -1,5 +1,5 @@
 
-#' Calculate the neutral transfer coefficient
+#' @title Calculate the neutral transfer coefficient
 #'
 #' @name neutral_transfer_coeff
 #' @param Uz vector of wind speed in (m/s)

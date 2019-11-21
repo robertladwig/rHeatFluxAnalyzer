@@ -1,4 +1,4 @@
-#' Function to construct input data dependency
+#' @title Construct input data dependency
 #'
 #' @param outputNames Names of the variables that should be outputed
 #' @param pltMods Modifications to the plot settings

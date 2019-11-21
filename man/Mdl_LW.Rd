@@ -3,10 +3,13 @@
 \name{Mdl_LW}
 \alias{Mdl_LW}
 \title{Model long wave radiation}
+\usage{
+Mdl_LW(airT, RH, clf, month)
+}
 \arguments{
-\item{airT}{air temperature in °C}
+\item{airT}{air temperature in degrees C}
 
-\item{RH}{relative humidity in %}
+\item{RH}{relative humidity in \%}
 
 \item{clf}{cloud cover fraction}
 

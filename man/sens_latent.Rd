@@ -18,7 +18,7 @@ sens_latent(ts, Uz, ta, rh, hu, ht, hq, alt, lat)
 
 \item{ta}{air temperature, degrees C.}
 
-\item{rh}{relative humidity, %.}
+\item{rh}{relative humidity, \%.}
 
 \item{hu}{height of wind measurement, m.}
 

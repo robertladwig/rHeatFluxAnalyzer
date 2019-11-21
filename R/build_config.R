@@ -1,15 +1,15 @@
 #' Build config file for rLHFA
-#' 
+#'
 #' @param LakeName Name of the lake
 #' @param directory Folder where the input files are stored
 #' @export
 
 build_config <- function(LakeName,directory){
 
-done <- FALSE
-spcFrac<- 2 #number of spaces <- char
-num2delim <- 20
-defSlt <- "wTemp"
+#done <- FALSE
+#spcFrac<- 2 #number of spaces <- char
+#num2delim <- 20
+#defSlt <- "wTemp"
 # see if file exists
 
 fI <- file.exists(paste0(directory, "/", LakeName, ".hfx"))
@@ -19,7 +19,8 @@ if (fI){
   if(!create%in%c("y","Y","yes","YES","Yes")){
     cat("Done \n")
   }
-} else {
+}
+if(create%in%c("y","Y","yes","YES","Yes")){
   # define possible outputs
   outputOptions <- matrix(c("Momentum flux","tau",
     "Sensible heat flux","Qh","Latent heat flux","Qe",
@@ -94,6 +95,7 @@ if (fI){
                      paste0(Output_user,collapse = ","),"\t\t#outputs \n",
                      paste0(apply(matrix(c(user_input,paste0(" \t\t # ",names)),2,10,byrow = TRUE),2,
                                   paste0,collapse=""),collapse = "\n"))
+  file_out <- paste0(file_out,"\r")
   cat(x = file_out,file=paste0(directory, "/", LakeName, ".hfx"))
   }
 }

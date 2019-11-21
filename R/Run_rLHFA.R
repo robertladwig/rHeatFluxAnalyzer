@@ -6,13 +6,11 @@
 #' @export
 #' @examples Run_LHFA(LakeName="Esthwaite",Folder="../data",skipLoad=TRUE)
 
-Run_LHFA <- function(LakeName,Folder,skipLoad=FALSE){
+Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
 #----Author: Jordan S Read 2009 ----
   #----Modified by R. Iestyn Woolway ----
   #---- R translation by Johannes Feldbauer -----
 
-
-  rm(list = ls())
   graphics.off()
   cat("\f")
 

@@ -3,7 +3,7 @@
 #' @param ts surface temperature, degrees C.
 #' @param  Uz wind speed, m/s.
 #' @param  ta air temperature, degrees C.
-#' @param  rh relative humidity, %.
+#' @param  rh relative humidity, \%.
 #' @param  hu height of wind measurement, m.
 #' @param  ht height of air temperature measurement, m.
 #' @param  hq heigh of humidity measurement, m.
