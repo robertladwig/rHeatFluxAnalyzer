@@ -3,6 +3,9 @@
 \name{calc_lwnet}
 \alias{calc_lwnet}
 \title{Calculate net long wave radiation}
+\usage{
+calc_lwnet(time, lat, press, ta, rh, sw, ts)
+}
 \arguments{
 \item{time}{Vector of times as POSIXct}
 
@@ -10,13 +13,13 @@
 
 \item{press}{Air pressure in (hPa) if available}
 
-\item{ta}{Air temperature in (°C) if available}
+\item{ta}{Air temperature in (degrees C) if available}
 
 \item{rh}{relative humidity in percentage if available}
 
 \item{sw}{observed showrt wave radiation}
 
-\item{ts}{Water surface temperature in °C}
+\item{ts}{Water surface temperature in degrees C}
 }
 \value{
 A data.frame with lw, LWo, and lwnet
