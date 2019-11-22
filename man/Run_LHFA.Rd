@@ -17,5 +17,5 @@ Run_LHFA(LakeName, Folder, skipLoad = FALSE)
 run rLakeHeatFluxAnalyzer
 }
 \examples{
-Run_LHFA(LakeName="Esthwaite",Folder="../data",skipLoad=TRUE)
+Run_LHFA(LakeName="Esthwaite",Folder="data",skipLoad=TRUE)
 }

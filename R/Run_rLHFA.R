@@ -104,9 +104,9 @@ Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
       steps[i] <- wt$dates[i+1] - wt$dates[i]
     }
     if(min(steps)==0){
-      matRs <- mean(steps)*matSec
+      matRs <- mean(steps)##*matSec
     } else {
-     matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+     matRs <- min(steps)##*matSec #POSIXct is allready in seconds
     }
 
     if ((Cfg$outRs - matRs)>dateTl){
@@ -156,9 +156,9 @@ Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
       steps[i] <- wnd$dates[i+1]-wnd$dates[i]
     }
     if (min(steps)==0){
-      matRs <- mean(steps)*matSec
+      matRs <- mean(steps)##*matSec
     } else {
-      matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+      matRs <- min(steps)##*matSec #current sample rate of raw data in seconds
     }
     rm( idx, steps, tLen)
     if ((Cfg$outRs - matRs)>dateTl){
@@ -203,9 +203,9 @@ Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
         steps[i] <- sw$dates[i+1] - sw$dates[i]
       }
       if (min(steps)==0){
-        matRs <- mean(steps)*matSec
+        matRs <- mean(steps)#*matSec
       } else {
-        matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+        matRs <- min(steps)#*matSec #current sample rate of raw data in seconds
       }
       rm (idx, steps, tLen)
       if((Cfg$outRs - matRs)>dateTl){
@@ -248,9 +248,9 @@ Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
           steps[i] <- sw$dates[i+1]-sw$dates[i]
         }
         if (min(steps)==0){
-          matRs <- mean(steps)*matSec
+          matRs <- mean(steps)#*matSec
         } else {
-          matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+          matRs <- min(steps)#*matSec #current sample rate of raw data in seconds
         }
         rm (idx, steps, tLen)
         if ((Cfg$outRs - matRs)>dateTl){
@@ -302,9 +302,9 @@ Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
       steps[i] <- airT$dates[i+1]-airT$dates[i]
     }
     if (min(steps)==0){
-      matRs <- mean(steps)*matSec
+      matRs <- mean(steps)#*matSec
     } else {
-      matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+      matRs <- min(steps)#*matSec #current sample rate of raw data in seconds
     }
     rm( idx,steps, tLen)
     if ((Cfg$outRs - matRs)>dateTl){
@@ -352,9 +352,9 @@ Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
       steps[i] <- rh$dates[i+1]-rh$dates[i]
     }
     if(min(steps)==0){
-      matRs <- mean(steps)*matSec
+      matRs <- mean(steps)#*matSec
     } else {
-      matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+      matRs <- min(steps)#*matSec #current sample rate of raw data in seconds
     }
     rm( idx,steps, tLen)
     if ((Cfg$outRs - matRs)>dateTl){
@@ -453,9 +453,9 @@ Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
         steps[i] <- lwnet$dates[i+1]-lwnet$dates[i]
       }
       if (min(steps)==0){
-        matRs <- mean(steps)*matSec
+        matRs <- mean(steps)#*matSec
       } else {
-        matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+        matRs <- min(steps)#*matSec #current sample rate of raw data in seconds
       }
       rm(idx,steps, tLen)
       if ((Cfg$outRs - matRs)>dateTl){
@@ -496,9 +496,9 @@ Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
             steps[i] <- lw$dates[i+1]-lw$dates[i]
           }
           if (min(steps)==0){
-            matRs <- mean(steps)*matSec
+            matRs <- mean(steps)#*matSec
           } else {
-            matRs <- min(steps)*matSec #current sample rate of raw data in seconds
+            matRs <- min(steps)#*matSec #current sample rate of raw data in seconds
           }
           rm(idx, steps, tLen)
           if ((Cfg$outRs - matRs)>dateTl){
@@ -580,6 +580,7 @@ Run_LHFA <- function(LakeName,Folder,skipLoad = FALSE){
     airT$dates <- as.POSIXct(idx,origin="1970-01-01")
     lwnet$dates <- as.POSIXct(idx,origin="1970-01-01")
     wnd$dates <- as.POSIXct(idx,origin="1970-01-01")
+    dates <- as.POSIXct(idx,origin="1970-01-01")
   }
 
   # if data isn't downsampled, define times and variable length

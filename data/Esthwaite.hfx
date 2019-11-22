@@ -1,7 +1,7 @@
 Configuration file for Esthwaite
  
 tau,Qh,Qe,C_DN,C_EN,C_HN,C_D10N,C_E10N,C_H10N,C_D,C_E,C_H,C_D10,C_E10,C_H10,u10,u10N,t10,rh10,Qlnet,Qlin,Qlout,uSt_a,uSt_aN,Evap,wTemp,Qsr,obu,Qtot,Qs,Qsin,rhoa10,rhow,rhoa		#outputs 
-86400 		 # output resolution (s)
+3600     # output resolution (s)
 2 		 # wind height (m)
 2 		 # temperature height (m)
 2 		 # humidity height (m)
@@ -10,4 +10,4 @@ tau,Qh,Qe,C_DN,C_EN,C_HN,C_D10N,C_E10N,C_H10N,C_D,C_E,C_H,C_D10,C_E10,C_H10,u10,
 98 		 # max wind speed (m/s)
 0 		 # min wind speed (m/s)
 N 		 # plot figure (Y/N)
-Y 		 # write results (Y/N)
+Y 		 # write results (Y/N)
