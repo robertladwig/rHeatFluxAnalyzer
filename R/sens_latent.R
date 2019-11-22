@@ -139,9 +139,10 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
     rm(zi)
 
     ustar[idx_m_vu] <- (Uz[idx_m_vu]*const_vonKarman)/((log((zetam*obu[idx_m_vu])/zo[idx_m_vu]) -
-                                                          psi_zeng(1,zetam)) + 1.14*(((-zeta[idx_m_vu])^0.333) - ((-zetam)^0.333)))
+                          psi_zeng(1,zetam)) + 1.14*(((-zeta[idx_m_vu])^0.333) - ((-zetam)^0.333)))
 
-    ustar[idx_m_u] <- (Uz[idx_m_u]*const_vonKarman)/(log(hu/zo[idx_m_u]) - psi_zeng(1,zeta[idx_m_u]))
+    ustar[idx_m_u] <- (Uz[idx_m_u]*const_vonKarman)/(log(hu/zo[idx_m_u]) -
+                                                       psi_zeng(1,zeta[idx_m_u]))
 
     ustar[idx_s] <- (Uz[idx_s]*const_vonKarman)/(log(hu/zo[idx_s]) + 5*zeta[idx_s])
 
@@ -214,7 +215,7 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
 
     # calculate wind speed at 10 m
     u10[idx_m_vu] <- (ustar[idx_m_vu]/const_vonKarman)*((log((zetam*obu[idx_m_vu])/zo[idx_m_vu]) -
-                                                           psi_zeng(1,zetam)) + 1.14*(((-zeta[idx_m_vu])^0.333) - ((-zetam)^0.333)))
+                          psi_zeng(1,zetam)) + 1.14*(((-zeta[idx_m_vu])^0.333) - ((-zetam)^0.333)))
 
     u10[idx_m_u] <- (ustar[idx_m_u]/const_vonKarman)* (log(10/zo[idx_m_u]) -
                                                          psi_zeng(1,zeta[idx_m_u]))
@@ -235,7 +236,7 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
     t10[idx_s] <- ((tstar[idx_s]/const_vonKarman)*(log(10/zot[idx_s]) + 5*zeta[idx_s])) + ts[idx_s]
 
     t10[idx_vs] <- ((tstar[idx_vs]/const_vonKarman)*((log(obu[idx_vs]/zot[idx_vs]) + 5) +
-                                                       (5*log(zeta[idx_vs]) + zeta[idx_vs] - 1))) + ts[idx_vs]
+                                       (5*log(zeta[idx_vs]) + zeta[idx_vs] - 1))) + ts[idx_vs]
 
     # calcuate specific humidity at 10 m
     q10[idx_t_vu] <- ((qstar[idx_t_vu]/const_vonKarman)*
@@ -278,7 +279,8 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
     idx_vs <- zi$idx_vs
     rm(zi)
 
-    Uz[idx_vs] <- max(c(Re(Uz[idx_vs]),0.1),na.rm = TRUE)
+    #Uz[idx_vs] <- max(c(Re(Uz[idx_vs]),0.1),na.rm = TRUE)
+    Uz[idx_vs&Re(Uz[idx_vs])<0.1] <- 0.1
 
     # avoid singularity at um <- 0 for unstable conditions
     idx <- idx_m_vu | idx_m_u # unstable
@@ -292,10 +294,10 @@ sens_latent <- function(ts,Uz,ta,rh,hu,ht,hq,alt,lat){
 
   # if the measurements are taken at a height of 10 m, keep original input data
   if (Re(hu) == 10){
-    u10 <- init_wndend
+    u10 <- init_wnd
   }
   if (Re(ht) == 10){
-    t10 <- taend
+    t10 <- ta
   }
 
   # convert specific humidity to relative humidity
@@ -352,3 +354,5 @@ psi_zeng <- function(k,zeta){
   }
   return(psi_zeng)
 }
+
+
