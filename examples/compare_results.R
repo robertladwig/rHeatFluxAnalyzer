@@ -1,8 +1,11 @@
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+library(rLakeHeatFluxAnalyzer)
+
 rm(list = ls())
 graphics.off()
 cat("\f")
 
-wnd <- gFileOpen("../data/Esthwaite.wnd")
+Run_LHFA("Esthwaite","../data/")
 
 res_m <- read.table("../Matlab_ExampleFiles/Esthwaite_results.txt",header = TRUE,sep = "\t")
 res_m$DateTime <- as.POSIXct(res_m$DateTime)
